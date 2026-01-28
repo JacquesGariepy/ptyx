@@ -581,17 +581,95 @@ debug → info → warn → error → silent
 
 Setting `PTYX_LOG_LEVEL=warn` shows only `warn` and `error` messages. Setting `PTYX_DEBUG=1` is equivalent to `PTYX_LOG_LEVEL=debug`.
 
-Example:
+### Platform-Specific Usage
+
+**Linux / macOS / WSL:**
 ```bash
-# Show all debug info
-PTYX_DEBUG=1 npx ptyx claude
+# Normal usage
+npx ptyx claude
 
-# Show only warnings and errors
-PTYX_LOG_LEVEL=warn npx ptyx claude
+# Debug mode - logs to file, terminal stays clean
+PTYX_DEBUG=1 npx ptyx claude 2>debug.log
 
-# Silent mode (no logs)
-PTYX_LOG_LEVEL=silent npx ptyx claude
+# Simulate VS Code terminal environment
+PTYX_SIMULATE=vscode npx ptyx claude
+
+# View debug logs
+cat debug.log
 ```
+
+**Windows PowerShell:**
+```powershell
+# Normal usage
+npx ptyx claude
+
+# Debug mode - logs to file, terminal stays clean
+$env:PTYX_DEBUG="1"; npx ptyx claude 2>debug.log
+
+# Simulate VS Code terminal environment
+$env:PTYX_SIMULATE="vscode"; npx ptyx claude
+
+# Clean up environment variables
+Remove-Item Env:PTYX_DEBUG -ErrorAction SilentlyContinue
+Remove-Item Env:PTYX_SIMULATE -ErrorAction SilentlyContinue
+```
+
+**Windows CMD:**
+```cmd
+set PTYX_DEBUG=1 && npx ptyx claude 2>debug.log
+```
+
+### Debugging Tips
+
+```bash
+# Normal usage (no debug output)
+npx ptyx claude
+
+# Debug mode - logs to file, terminal stays clean
+PTYX_DEBUG=1 npx ptyx claude 2>debug.log
+
+# View debug logs after session
+cat debug.log
+
+# Use built-in adapters for better CLI detection
+npx ptyx --builtins claude
+```
+
+## Development
+
+### Local Testing
+
+```bash
+# Build the package
+npm run build
+
+# Create tarball for testing
+npm pack
+
+# Test in another project
+cd /path/to/test-project
+npm install /path/to/ptyx/ptyx-1.0.0.tgz
+
+# Or link for development
+npm link
+cd /path/to/test-project
+npm link ptyx
+```
+
+### Cross-Platform Development
+
+When developing on Windows with WSL, `node_modules` must be installed for each platform:
+
+```bash
+# On Windows (PowerShell)
+npm install    # Downloads Windows prebuilds
+
+# On WSL/Linux
+rm -rf node_modules
+npm install    # Downloads Linux prebuilds
+```
+
+Native modules like `node-pty` contain platform-specific binaries. Install on the same platform where you'll run the code.
 
 ## Publishing to npm
 
