@@ -1,12 +1,12 @@
 /**
- * pty-agent - Exemples pratiques (nouvelle architecture)
+ * ptyx - Exemples pratiques (nouvelle architecture)
  *
  * Installation:
- *   npm install pty-agent
+ *   npm install ptyx
  *
  * La nouvelle architecture utilise l'injection d'adapters:
  *   - Aucun adapter hardcodé dans le package principal
- *   - Adapters optionnels dans 'pty-agent/adapters/*'
+ *   - Adapters optionnels dans 'ptyx/adapters/*'
  *   - Support plugins npm et fichiers locaux
  */
 
@@ -14,13 +14,13 @@
 // EXEMPLE 1: Usage basique - Sans adapter (generic)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createAgent } from 'pty-agent';
+import { createAgent } from 'ptyx';
 
 async function exempleBasique() {
   // Lancer n'importe quel CLI sans adapter spécifique
   const agent = await createAgent({
     command: 'node',
-    args: ['-e', 'console.log("Hello from pty-agent!")'],
+    args: ['-e', 'console.log("Hello from ptyx!")'],
   });
 
   agent.on('message', (msg) => {
@@ -37,10 +37,10 @@ async function exempleBasique() {
 // EXEMPLE 2: Avec builtin adapters
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, registerAdapter } from 'pty-agent';
+import { createWithAdapter, registerAdapter } from 'ptyx';
 // Import optionnel des adapters builtin
-import claudeAdapter from 'pty-agent/adapters/claude';
-import { registerBuiltins } from 'pty-agent/adapters/builtins';
+import claudeAdapter from 'ptyx/adapters/claude';
+import { registerBuiltins } from 'ptyx/adapters/builtins';
 
 async function exempleAvecBuiltins() {
   // Option A: Enregistrer un seul adapter
@@ -70,7 +70,7 @@ async function exempleAvecBuiltins() {
 // EXEMPLE 3: Injection directe d'adapter
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, defineAdapter } from 'pty-agent';
+import { createWithAdapter, defineAdapter } from 'ptyx';
 
 async function exempleInjection() {
   // Définir un adapter custom inline
@@ -102,7 +102,7 @@ async function exempleInjection() {
 // EXEMPLE 4: Chargement de plugin
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, loadAdapterPlugin } from 'pty-agent';
+import { createWithAdapter, loadAdapterPlugin } from 'ptyx';
 
 async function exemplePlugin() {
   // Option A: Charger et enregistrer manuellement
@@ -122,8 +122,8 @@ async function exemplePlugin() {
 // EXEMPLE 5: Multi-agents avec adapters différents
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, registerAdapters } from 'pty-agent';
-import { builtinAdapters } from 'pty-agent/adapters/builtins';
+import { createWithAdapter, registerAdapters } from 'ptyx';
+import { builtinAdapters } from 'ptyx/adapters/builtins';
 
 async function exempleMultiAgents() {
   // Enregistrer tous les builtins
@@ -155,7 +155,7 @@ async function exempleMultiAgents() {
 // EXEMPLE 6: Adapter avec middleware custom
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, defineAdapter, type Middleware } from 'pty-agent';
+import { createWithAdapter, defineAdapter, type Middleware } from 'ptyx';
 
 async function exempleMiddleware() {
   const adapterWithMiddleware = defineAdapter({
@@ -190,7 +190,7 @@ async function exempleMiddleware() {
 // EXEMPLE 7: Pattern Observer - Events typés
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createAgent } from 'pty-agent';
+import { createAgent } from 'ptyx';
 
 async function exempleEvents() {
   const agent = await createAgent({

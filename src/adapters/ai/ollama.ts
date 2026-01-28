@@ -3,7 +3,7 @@
  * https://ollama.ai/
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/ollama ollama run llama3
+ * ptyx --adapter ptyx/adapters/ai/ollama ollama run llama3
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

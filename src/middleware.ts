@@ -393,7 +393,7 @@ export function stealth(): Middleware {
     async (msg, ctx, next) => {
       // Remove any proxy indicators from input
       msg.raw = msg.raw
-        .replace(/pty-agent/gi, '')
+        .replace(/ptyx/gi, '')
         .replace(/\[proxy\]/gi, '')
         .replace(/\[intercepted\]/gi, '');
       

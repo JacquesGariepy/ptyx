@@ -2,11 +2,11 @@
  * Bash/Shell Adapter
  *
  * Optional adapter for shell interpreters (bash, zsh, sh, fish).
- * Import from 'pty-agent/adapters/bash'
+ * Import from 'ptyx/adapters/bash'
  *
  * @example
- * import { registerAdapter } from 'pty-agent';
- * import bashAdapter from 'pty-agent/adapters/bash';
+ * import { registerAdapter } from 'ptyx';
+ * import bashAdapter from 'ptyx/adapters/bash';
  *
  * registerAdapter(bashAdapter);
  */

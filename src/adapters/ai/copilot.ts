@@ -3,7 +3,7 @@
  * https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/copilot gh copilot suggest
+ * ptyx --adapter ptyx/adapters/ai/copilot gh copilot suggest
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

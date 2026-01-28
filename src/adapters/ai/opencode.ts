@@ -3,7 +3,7 @@
  * https://github.com/opencode/opencode
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/opencode opencode
+ * ptyx --adapter ptyx/adapters/ai/opencode opencode
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

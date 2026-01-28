@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 /**
- * Exemple simple - Comment utiliser pty-agent
- * 
+ * Exemple simple - Comment utiliser ptyx
+ *
  * Installation:
- *   npm install pty-agent
- * 
+ *   npm install ptyx
+ *
  * Lancement:
  *   node simple-example.mjs
  */
 
-import { createAgent, claude, logger } from 'pty-agent';
+import { createAgent, createWithAdapter, logger } from 'ptyx';
+import { registerAiAdapters } from 'ptyx/adapters/ai';
 
 // ════════════════════════════════════════════════════════════════════
 // Option 1: Lancer Claude
@@ -17,10 +18,13 @@ import { createAgent, claude, logger } from 'pty-agent';
 
 async function runClaude() {
   console.log('🚀 Lancement de Claude...\n');
-  
+
+  // Register AI adapters
+  registerAiAdapters();
+
   // Créer l'agent Claude
-  const ai = await claude();
-  
+  const ai = await createWithAdapter({ command: 'claude' });
+
   // Écouter les messages
   ai.on('message', (msg) => {
     if (msg.direction === 'out') {
@@ -29,15 +33,15 @@ async function runClaude() {
       process.stdout.write(msg.raw);
     }
   });
-  
+
   // Envoyer une question
   ai.sendLine('Dis "Bonjour" en 5 langues différentes.');
-  
+
   // Attendre la fin de la réponse (prompt)
   await ai.waitFor(/[❯>]\s*$/, 60000);
-  
+
   console.log('\n\n✅ Réponse reçue!');
-  
+
   // Fermer
   await ai.dispose();
 }
@@ -48,29 +52,29 @@ async function runClaude() {
 
 async function runAnyCLI() {
   console.log('🚀 Lancement de bash...\n');
-  
+
   const agent = await createAgent({
     command: 'bash',
     args: [],
   });
-  
+
   // Logger les sorties
   agent.use(logger({ output: true }));
-  
+
   // Écouter
   agent.on('message', (msg) => {
     if (msg.direction === 'out') {
       console.log('[BASH]', msg.text);
     }
   });
-  
+
   // Envoyer des commandes
   agent.sendLine('echo "Hello World"');
   agent.sendLine('pwd');
   agent.sendLine('ls -la');
-  
+
   await agent.wait(2000);
-  
+
   agent.sendLine('exit');
   await agent.dispose();
 }
@@ -82,17 +86,17 @@ async function runAnyCLI() {
 async function transparentMode() {
   const command = process.argv[3] || 'bash';
   console.log(`🚀 Mode transparent: ${command}\n`);
-  
+
   const agent = await createAgent({
     command,
     args: process.argv.slice(4),
   });
-  
+
   // Passthrough stdout
   agent.on('data', (data, dir) => {
     if (dir === 'out') process.stdout.write(data);
   });
-  
+
   // Passthrough stdin
   if (process.stdin.isTTY) {
     process.stdin.setRawMode(true);
@@ -101,12 +105,12 @@ async function transparentMode() {
   process.stdin.on('data', (data) => {
     agent.write(data.toString());
   });
-  
+
   // Resize
   process.stdout.on('resize', () => {
     agent.resize(process.stdout.columns, process.stdout.rows);
   });
-  
+
   // Exit quand le process termine
   agent.on('exit', (code) => {
     console.log(`\n\nProcess terminé (code: ${code})`);

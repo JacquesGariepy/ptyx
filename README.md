@@ -1,13 +1,13 @@
-# pty-agent
+# ptyx
 
 > Universal transparent PTY wrapper — Launch and control any CLI invisibly.
 
-[![npm version](https://img.shields.io/npm/v/pty-agent.svg?style=flat-square)](https://www.npmjs.com/package/pty-agent)
+[![npm version](https://img.shields.io/npm/v/ptyx.svg?style=flat-square)](https://www.npmjs.com/package/ptyx)
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 ## What is this?
 
-`pty-agent` is a universal wrapper that can launch **any** command-line application through a pseudo-terminal (PTY), while remaining completely invisible to the wrapped process. It's like a one-way mirror for CLI applications.
+`ptyx` is a universal wrapper that can launch **any** command-line application through a pseudo-terminal (PTY), while remaining completely invisible to the wrapped process. It's like a one-way mirror for CLI applications.
 
 **Use cases:**
 - Wrap Claude CLI, ChatGPT CLI, or any AI assistant
@@ -20,7 +20,7 @@
 ## Installation
 
 ```bash
-npm install pty-agent
+npm install ptyx
 ```
 
 ## Quick Start
@@ -29,19 +29,26 @@ npm install pty-agent
 
 ```bash
 # Wrap any command transparently
-npx pty-agent claude --model opus
+npx ptyx claude --model opus
 
 # With logging
-PTY_AGENT_LOG=session.log npx pty-agent python3 -i
+PTYX_LOG=session.log npx ptyx python3 -i
 
 # Debug mode
-PTY_AGENT_DEBUG=1 npx pty-agent node
+PTYX_DEBUG=1 npx ptyx node
+
+# Load AI adapters
+npx ptyx --builtins claude --model opus
 ```
 
 ### Programmatic Usage
 
 ```typescript
-import { createAgent, claude, python, shell } from 'pty-agent';
+import { createAgent, createWithAdapter } from 'ptyx';
+import { registerAiAdapters } from 'ptyx/adapters/ai';
+
+// Register AI adapters (claude, copilot, gemini, etc.)
+registerAiAdapters();
 
 // Generic: wrap any command
 const agent = await createAgent({
@@ -49,10 +56,8 @@ const agent = await createAgent({
   args: ['--model', 'claude-opus-4-5'],
 });
 
-// Presets for common CLIs
-const ai = await claude(['--model', 'opus']);
-const py = await python('script.py');
-const sh = await shell();
+// With adapter auto-detection
+const ai = await createWithAdapter({ command: 'claude' });
 
 // Intercept all I/O
 agent.on('message', (msg) => {
@@ -69,12 +74,73 @@ const response = await agent.waitFor(/completed/i, 5000);
 await agent.dispose();
 ```
 
+## Adapters
+
+Adapters provide CLI-specific behavior (prompt detection, tool parsing, etc.)
+
+### Built-in AI Adapters
+
+```typescript
+import { registerAiAdapters } from 'ptyx/adapters/ai';
+
+// Register all AI CLI adapters at once
+registerAiAdapters();
+
+// Includes: claude, copilot, amazon-q, gemini, mistral, perplexity,
+// ollama, tabby, aider, cody, cursor, continue, goose, vibeos,
+// opencode, codeium, open-interpreter, chatgpt, codex, llm
+```
+
+### Built-in REPL Adapters
+
+```typescript
+import { registerBuiltins } from 'ptyx/adapters/builtins';
+
+// Register shell/REPL adapters
+registerBuiltins();
+
+// Includes: node, python, bash
+```
+
+### Custom Adapter
+
+```typescript
+import { defineAdapter, registerAdapter, createWithAdapter } from 'ptyx';
+
+const myAdapter = defineAdapter({
+  name: 'my-cli',
+  detect: (config) => config.command === 'my-cli',
+  isReady: (msg) => msg.text.includes('Ready>'),
+  isPrompt: (msg) => /^>\s*$/m.test(msg.text),
+  configure: (config) => ({
+    ...config,
+    env: { ...config.env, MY_VAR: 'value' },
+  }),
+});
+
+// Option 1: Register globally
+registerAdapter(myAdapter);
+const agent = await createWithAdapter({ command: 'my-cli' });
+
+// Option 2: Inject directly
+const agent = await createWithAdapter({
+  command: 'my-cli',
+  adapter: myAdapter,
+});
+
+// Option 3: Load from plugin file
+const agent = await createWithAdapter({
+  command: 'my-cli',
+  adapterPlugin: './my-adapter.js',
+});
+```
+
 ## API
 
 ### Creating Agents
 
 ```typescript
-import { createAgent, wrap, exec } from 'pty-agent';
+import { createAgent, wrap, exec } from 'ptyx';
 
 // Full configuration
 const agent = await createAgent({
@@ -95,27 +161,6 @@ const agent = await wrap('node', ['script.js']);
 
 // From command string
 const agent = await exec('python3 -i');
-```
-
-### Presets
-
-```typescript
-import { claude, node, python, bash, shell } from 'pty-agent';
-
-// Claude CLI
-const ai = await claude(['--model', 'opus']);
-
-// Node.js
-const n = await node('script.js', ['--arg']);
-
-// Python
-const py = await python('script.py');
-
-// Bash command
-const b = await bash('echo hello');
-
-// Interactive shell
-const sh = await shell();
 ```
 
 ### Agent Methods
@@ -182,7 +227,7 @@ import {
   recorder,      // Record session
   filter,        // Filter output
   stealth,       // Remove proxy traces
-} from 'pty-agent';
+} from 'ptyx';
 ```
 
 ### Examples
@@ -232,7 +277,7 @@ agent.use(rec);
 ### Custom Middleware
 
 ```typescript
-import { middleware } from 'pty-agent';
+import { middleware } from 'ptyx';
 
 const myMiddleware = middleware(
   'my-middleware',  // Name
@@ -241,13 +286,13 @@ const myMiddleware = middleware(
     // Access context
     console.log('Agent:', ctx.agent.name);
     console.log('History:', ctx.history.length);
-    
+
     // Modify message
     msg.meta.processed = true;
-    
+
     // Continue chain
     await next();
-    
+
     // Post-processing
   },
   100  // Priority (lower = earlier)
@@ -256,95 +301,29 @@ const myMiddleware = middleware(
 agent.use(myMiddleware);
 ```
 
-## Adapters
-
-Adapters provide CLI-specific behavior (prompt detection, tool parsing, etc.)
-
-### Built-in Adapters
-
-```typescript
-import {
-  claudeAdapter,    // Claude CLI
-  nodeAdapter,      // Node.js
-  pythonAdapter,    // Python
-  bashAdapter,      // Bash/shell
-  genericAdapter,   // Fallback
-} from 'pty-agent';
-```
-
-### Custom Adapter
-
-```typescript
-import { registerAdapter } from 'pty-agent';
-
-registerAdapter({
-  name: 'my-cli',
-  
-  // Detect if this adapter should handle the command
-  detect: (config) => config.command === 'my-cli',
-  
-  // Modify config before spawn
-  configure: (config) => ({
-    ...config,
-    env: { ...config.env, MY_VAR: 'value' },
-  }),
-  
-  // Detect ready state
-  isReady: (msg) => msg.text.includes('Ready>'),
-  
-  // Detect prompt
-  isPrompt: (msg) => /^>\s*$/m.test(msg.text),
-  
-  // Default middleware
-  middleware: () => [
-    logger({ output: true }),
-  ],
-});
-```
-
 ## Integration Examples
-
-### With moltbot
-
-```typescript
-import { claude } from 'pty-agent';
-import { Gateway } from 'moltbot';
-
-const gateway = new Gateway();
-const ai = await claude();
-
-gateway.on('message', (msg) => {
-  ai.sendLine(msg.content);
-});
-
-ai.on('message', (msg) => {
-  if (msg.direction === 'out') {
-    gateway.reply(msg.text);
-  }
-});
-```
 
 ### Express API
 
 ```typescript
 import express from 'express';
-import { createAgent } from 'pty-agent';
+import { createAgent } from 'ptyx';
 
 const app = express();
 
 app.post('/execute', async (req, res) => {
   const { command, input } = req.body;
-  
+
   const agent = await createAgent({ command });
   let output = '';
-  
+
   agent.on('message', (msg) => {
     if (msg.direction === 'out') output += msg.text;
   });
-  
+
   agent.sendLine(input);
   await agent.waitFor(/\$\s*$/, 5000);
-  
+
   await agent.dispose();
   res.json({ output });
 });
@@ -353,44 +332,40 @@ app.post('/execute', async (req, res) => {
 ### Automated Testing
 
 ```typescript
-import { createAgent } from 'pty-agent';
+import { createAgent } from 'ptyx';
 import { test, expect } from 'vitest';
 
 test('CLI responds correctly', async () => {
   const agent = await createAgent({ command: 'my-cli' });
-  
+
   agent.sendLine('help');
   const msg = await agent.waitFor(/Usage:/i);
-  
+
   expect(msg.text).toContain('Usage:');
   await agent.dispose();
 });
-```
-
-## Publishing to npm
-
-First time setup:
-
-```bash
-# 1. Create npm account at https://www.npmjs.com/signup
-
-# 2. Login
-npm login
-
-# 3. Build
-npm run build
-
-# 4. Publish
-npm publish
 ```
 
 ## Environment Variables
 
 | Variable | Description |
 |----------|-------------|
-| `PTY_AGENT_DEBUG` | Set to `1` for debug output |
-| `PTY_AGENT_LOG` | Path to log file |
-| `CLAUDE_PATH` | Custom path to Claude CLI |
+| `PTYX_DEBUG` | Set to `1` for debug output |
+| `PTYX_LOG` | Path to log file |
+| `PTYX_ADAPTERS` | Comma-separated adapter plugins to load |
+
+## Publishing to npm
+
+```bash
+# 1. Login to npm
+npm login
+
+# 2. Build
+npm run build
+
+# 3. Publish
+npm publish
+```
 
 ## License
 

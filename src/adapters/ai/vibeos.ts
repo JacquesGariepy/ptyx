@@ -3,8 +3,8 @@
  * AI Coding Agent with TUI
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/vibeos vibeos
- * pty-agent --adapter pty-agent/adapters/ai/vibeos vibeos chat "hello"
+ * ptyx --adapter ptyx/adapters/ai/vibeos vibeos
+ * ptyx --adapter ptyx/adapters/ai/vibeos vibeos chat "hello"
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

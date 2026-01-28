@@ -1,13 +1,12 @@
 {
-  "name": "pty-agent",
+  "name": "ptyx",
   "version": "1.0.0",
   "description": "Universal transparent PTY wrapper - Launch and control any CLI invisibly",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "bin": {
-    "pty-agent": "./dist/cli.js",
-    "pty-wrap": "./dist/cli.js"
+    "ptyx": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -192,12 +191,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JacquesGariepy/pty-agent.git"
+    "url": "git+https://github.com/JacquesGariepy/ptyx.git"
   },
   "bugs": {
-    "url": "https://github.com/JacquesGariepy/pty-agent/issues"
+    "url": "https://github.com/JacquesGariepy/ptyx/issues"
   },
-  "homepage": "https://github.com/JacquesGariepy/pty-agent#readme",
+  "homepage": "https://github.com/JacquesGariepy/ptyx#readme",
   "engines": {
     "node": ">=18"
   },

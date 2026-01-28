@@ -97,13 +97,13 @@ export interface PluginModule {
  *
  * @example
  * // Load from npm package
- * await loadAdapterPlugin('pty-agent-adapter-claude');
+ * await loadAdapterPlugin('ptyx-adapter-claude');
  *
  * // Load from local file
  * await loadAdapterPlugin('./my-adapter.js');
  *
  * // Load and get the adapter without auto-registering
- * const adapter = await loadAdapterPlugin('pty-agent-adapter-claude', { register: false });
+ * const adapter = await loadAdapterPlugin('ptyx-adapter-claude', { register: false });
  */
 export async function loadAdapterPlugin(
   modulePath: string,
@@ -181,7 +181,7 @@ export interface CreateWithAdapterOptions extends AgentConfig {
  * // Load adapter from plugin
  * const agent = await createWithAdapter({
  *   command: 'claude',
- *   adapterPlugin: 'pty-agent-adapter-claude',
+ *   adapterPlugin: 'ptyx-adapter-claude',
  * });
  */
 export async function createWithAdapter(

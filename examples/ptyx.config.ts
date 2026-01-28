@@ -1,12 +1,12 @@
 /**
- * pty-agent Configuration Example
+ * ptyx Configuration Example
  *
- * This file shows how to configure pty-agent programmatically.
+ * This file shows how to configure ptyx programmatically.
  * You can create a configuration file that registers adapters,
  * sets up middleware, and configures defaults.
  *
  * Usage:
- *   1. Create a config file (e.g., pty-agent.config.ts)
+ *   1. Create a config file (e.g., ptyx.config.ts)
  *   2. Import and call registerConfig() at app startup
  *   3. Use createWithAdapter() - adapters will be auto-detected
  */
@@ -19,13 +19,13 @@ import {
   createWithAdapter,
   type Adapter,
   type AgentConfig,
-} from 'pty-agent';
+} from 'ptyx';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Configuration Options
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export interface PtyAgentConfig {
+export interface PtyxConfig {
   /** Adapters to register */
   adapters?: Adapter[];
 
@@ -52,7 +52,7 @@ export interface PtyAgentConfig {
 // Example Configuration
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export const config: PtyAgentConfig = {
+export const config: PtyxConfig = {
   // Use all AI CLI adapters (claude, copilot, gemini, etc.)
   useAiAdapters: true,
 
@@ -61,7 +61,7 @@ export const config: PtyAgentConfig = {
 
   // Load additional plugins from npm or local files
   plugins: [
-    // 'pty-agent-adapter-my-custom-cli',
+    // 'ptyx-adapter-my-custom-cli',
     // './adapters/my-local-adapter.js',
   ],
 
@@ -100,18 +100,18 @@ export const config: PtyAgentConfig = {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * Apply configuration to pty-agent
+ * Apply configuration to ptyx
  */
-export async function registerConfig(cfg: PtyAgentConfig = config): Promise<void> {
+export async function registerConfig(cfg: PtyxConfig = config): Promise<void> {
   // Load AI adapters
   if (cfg.useAiAdapters) {
-    const { registerAiAdapters } = await import('pty-agent/adapters/ai');
+    const { registerAiAdapters } = await import('ptyx/adapters/ai');
     registerAiAdapters();
   }
 
   // Load builtin adapters
   if (cfg.useBuiltins) {
-    const { registerBuiltins } = await import('pty-agent/adapters/builtins');
+    const { registerBuiltins } = await import('ptyx/adapters/builtins');
     registerBuiltins();
   }
 
@@ -180,14 +180,14 @@ async function example3_EnvBased() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 /**
- * You can also use a JSON config file (pty-agent.json):
+ * You can also use a JSON config file (ptyx.json):
  *
  * {
- *   "$schema": "https://example.com/pty-agent.schema.json",
+ *   "$schema": "https://example.com/ptyx.schema.json",
  *   "useAiAdapters": true,
  *   "useBuiltins": true,
  *   "plugins": [
- *     "pty-agent-adapter-custom"
+ *     "ptyx-adapter-custom"
  *   ],
  *   "defaultEnv": {
  *     "TERM": "xterm-256color"
@@ -199,7 +199,7 @@ async function example3_EnvBased() {
  * }
  */
 
-export async function loadJsonConfig(path: string): Promise<PtyAgentConfig> {
+export async function loadJsonConfig(path: string): Promise<PtyxConfig> {
   const fs = await import('fs');
   const content = fs.readFileSync(path, 'utf-8');
   return JSON.parse(content);

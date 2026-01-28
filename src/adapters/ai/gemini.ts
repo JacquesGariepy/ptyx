@@ -3,7 +3,7 @@
  * https://github.com/google-gemini/gemini-cli
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/gemini gemini
+ * ptyx --adapter ptyx/adapters/ai/gemini gemini
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

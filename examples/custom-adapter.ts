@@ -3,8 +3,8 @@
  *
  * This file demonstrates how to create a custom adapter for any CLI.
  * It can be used as:
- *   - A local file: pty-agent --adapter ./custom-adapter.js my-cli
- *   - An npm package: pty-agent --adapter my-adapter-package my-cli
+ *   - A local file: ptyx --adapter ./custom-adapter.js my-cli
+ *   - An npm package: ptyx --adapter my-adapter-package my-cli
  *
  * Adapter plugins should export:
  *   - default: Adapter (single adapter)
@@ -12,8 +12,8 @@
  *   - adapters: Adapter[] (multiple adapters)
  */
 
-import { defineAdapter, registerAdapter, createWithAdapter } from 'pty-agent';
-import type { Adapter, AgentConfig, Message, Middleware } from 'pty-agent';
+import { defineAdapter, registerAdapter, createWithAdapter } from 'ptyx';
+import type { Adapter, AgentConfig, Message, Middleware } from 'ptyx';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Option 1: Using defineAdapter helper (recommended)

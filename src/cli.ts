@@ -1,18 +1,18 @@
 #!/usr/bin/env node
 /**
- * pty-agent CLI
+ * ptyx CLI
  *
  * Transparent PTY wrapper for any command.
  *
  * Usage:
- *   pty-agent <command> [args...]
- *   pty-agent --adapter ./my-adapter.js my-cli --flag
- *   pty-agent --builtins claude --model opus
+ *   ptyx <command> [args...]
+ *   ptyx --adapter ./my-adapter.js my-cli --flag
+ *   ptyx --builtins claude --model opus
  *
  * Environment:
- *   PTY_AGENT_DEBUG=1       Enable debug output
- *   PTY_AGENT_LOG=file      Log all I/O to file
- *   PTY_AGENT_ADAPTERS=...  Comma-separated adapter plugins to load
+ *   PTYX_DEBUG=1       Enable debug output
+ *   PTYX_LOG=file      Log all I/O to file
+ *   PTYX_ADAPTERS=...  Comma-separated adapter plugins to load
  */
 
 import { PtyAgent } from './agent.js';
@@ -25,36 +25,36 @@ const args = process.argv.slice(2);
 // Show help
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
   console.log(`
-pty-agent - Transparent PTY wrapper with plugin adapters
+ptyx - Transparent PTY wrapper with plugin adapters
 
 Usage:
-  pty-agent [options] <command> [args...]
+  ptyx [options] <command> [args...]
 
 Options:
   --adapter <path>   Load adapter from file or npm package
   --adapters <list>  Load multiple adapters (comma-separated)
-  --builtins         Load all builtin adapters (claude, node, python, bash)
+  --builtins         Load all builtin adapters (AI + REPL: claude, q, copilot, gemini, node, python, bash, etc.)
   -h, --help         Show this help
   -v, --version      Show version
 
 Examples:
   # Basic usage (no adapter)
-  pty-agent node -i
-  pty-agent python3 script.py
+  ptyx node -i
+  ptyx python3 script.py
 
   # With builtin adapters
-  pty-agent --builtins claude --model opus
+  ptyx --builtins claude --model opus
 
   # With custom adapter
-  pty-agent --adapter ./my-adapter.js my-cli --interactive
+  ptyx --adapter ./my-adapter.js my-cli --interactive
 
   # With npm adapter package
-  pty-agent --adapter pty-agent-adapter-claude claude
+  ptyx --adapter ptyx-adapter-claude claude
 
 Environment:
-  PTY_AGENT_DEBUG=1       Enable debug logging to stderr
-  PTY_AGENT_LOG=<file>    Log all I/O to file
-  PTY_AGENT_ADAPTERS=...  Comma-separated adapter plugins to load
+  PTYX_DEBUG=1       Enable debug logging to stderr
+  PTYX_LOG=<file>    Log all I/O to file
+  PTYX_ADAPTERS=...  Comma-separated adapter plugins to load
 `);
   process.exit(0);
 }
@@ -91,8 +91,8 @@ for (let i = 0; i < args.length; i++) {
 }
 
 // Add adapters from environment
-if (process.env.PTY_AGENT_ADAPTERS) {
-  adapterPaths.push(...process.env.PTY_AGENT_ADAPTERS.split(',').map(s => s.trim()));
+if (process.env.PTYX_ADAPTERS) {
+  adapterPaths.push(...process.env.PTYX_ADAPTERS.split(',').map(s => s.trim()));
 }
 
 // Get command and args
@@ -105,8 +105,8 @@ if (!command) {
 }
 
 // Environment options
-const debug = process.env.PTY_AGENT_DEBUG === '1';
-const logFile = process.env.PTY_AGENT_LOG;
+const debug = process.env.PTYX_DEBUG === '1';
+const logFile = process.env.PTYX_LOG;
 
 async function main() {
   // Load builtin adapters if requested
@@ -115,10 +115,20 @@ async function main() {
       const { registerBuiltins } = await import('./adapters/index.js');
       registerBuiltins();
       if (debug) {
-        console.error('[pty-agent] Loaded builtin adapters');
+        console.error('[ptyx] Loaded REPL adapters (node, python, bash)');
       }
     } catch (err) {
-      console.error(`[pty-agent] Failed to load builtin adapters: ${err}`);
+      console.error(`[ptyx] Failed to load REPL adapters: ${err}`);
+    }
+
+    try {
+      const { registerAiAdapters } = await import('./adapters/ai/index.js');
+      registerAiAdapters();
+      if (debug) {
+        console.error('[ptyx] Loaded AI adapters (claude, copilot, q, gemini, etc.)');
+      }
+    } catch (err) {
+      console.error(`[ptyx] Failed to load AI adapters: ${err}`);
     }
   }
 
@@ -127,10 +137,10 @@ async function main() {
     try {
       await loadAdapterPlugins(adapterPaths);
       if (debug) {
-        console.error(`[pty-agent] Loaded adapters: ${adapterPaths.join(', ')}`);
+        console.error(`[ptyx] Loaded adapters: ${adapterPaths.join(', ')}`);
       }
     } catch (err) {
-      console.error(`[pty-agent] Failed to load adapters: ${err}`);
+      console.error(`[ptyx] Failed to load adapters: ${err}`);
       process.exit(1);
     }
   }
@@ -156,7 +166,7 @@ async function main() {
   }
 
   if (debug) {
-    console.error(`[pty-agent] Using adapter: ${adapter.name}`);
+    console.error(`[ptyx] Using adapter: ${adapter.name}`);
   }
 
   const agent = new PtyAgent(finalConfig);
@@ -174,7 +184,7 @@ async function main() {
       input: true,
       output: true,
       logger: (dir, text) => {
-        process.stderr.write(`[pty-agent] ${dir} ${text}\n`);
+        process.stderr.write(`[ptyx] ${dir} ${text}\n`);
       },
     }));
   }
@@ -214,7 +224,7 @@ async function main() {
   // Handle errors gracefully
   agent.on('error', (err) => {
     if (debug) {
-      process.stderr.write(`[pty-agent error] ${err.message}\n`);
+      process.stderr.write(`[ptyx error] ${err.message}\n`);
     }
   });
 

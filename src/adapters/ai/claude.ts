@@ -3,7 +3,7 @@
  * https://github.com/anthropics/claude-code
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/claude claude --model opus
+ * ptyx --adapter ptyx/adapters/ai/claude claude --model opus
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

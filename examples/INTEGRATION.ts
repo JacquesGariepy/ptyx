@@ -1,9 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * GUIDE D'INTÉGRATION: pty-agent dans ton app / moltbot
+ * GUIDE D'INTÉGRATION: ptyx dans ton app / moltbot
  * ═══════════════════════════════════════════════════════════════════════════════
  * 
- * Ce fichier montre EXACTEMENT comment intégrer pty-agent.
+ * Ce fichier montre EXACTEMENT comment intégrer ptyx.
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -12,14 +12,14 @@
 /*
 {
   "dependencies": {
-    "pty-agent": "^1.0.0"
+    "ptyx": "^1.0.0"
   }
 }
 
 Ou si tu utilises le package local:
 {
   "dependencies": {
-    "pty-agent": "file:../pty-agent"
+    "ptyx": "file:../ptyx"
   }
 }
 */
@@ -28,8 +28,8 @@ Ou si tu utilises le package local:
 // ÉTAPE 2: Import dans ton code
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createAgent, claude, createWithAdapter } from 'pty-agent';
-import { logger, fileLogger, interceptor } from 'pty-agent/middleware';
+import { createAgent, claude, createWithAdapter } from 'ptyx';
+import { logger, fileLogger, interceptor } from 'ptyx/middleware';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // OPTION A: Service simple pour moltbot
@@ -124,7 +124,7 @@ export async function setupMoltbotGateway() {
       const msg = JSON.parse(data.toString());
       
       if (msg.type === 'chat') {
-        // Envoyer à Claude via pty-agent
+        // Envoyer à Claude via ptyx
         const response = await claudeService.ask(msg.content);
         
         // Renvoyer la réponse
@@ -324,11 +324,11 @@ curl -X POST http://localhost:3000/chat \
 
 /*
 1. AJOUTER LA DÉPENDANCE:
-   npm install pty-agent
-   ou copier le dossier pty-agent dans ton projet
+   npm install ptyx
+   ou copier le dossier ptyx dans ton projet
 
 2. IMPORTER:
-   import { claude, createAgent } from 'pty-agent';
+   import { claude, createAgent } from 'ptyx';
 
 3. CRÉER UN SERVICE:
    const service = new ClaudeService();

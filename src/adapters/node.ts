@@ -2,11 +2,11 @@
  * Node.js REPL Adapter
  *
  * Optional adapter for Node.js interactive REPL.
- * Import from 'pty-agent/adapters/node'
+ * Import from 'ptyx/adapters/node'
  *
  * @example
- * import { registerAdapter } from 'pty-agent';
- * import nodeAdapter from 'pty-agent/adapters/node';
+ * import { registerAdapter } from 'ptyx';
+ * import nodeAdapter from 'ptyx/adapters/node';
  *
  * registerAdapter(nodeAdapter);
  */

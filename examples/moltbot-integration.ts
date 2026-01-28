@@ -1,15 +1,15 @@
 /**
- * Intégration moltbot avec pty-agent
+ * Intégration moltbot avec ptyx
  * 
  * Ce fichier montre comment moltbot peut contrôler Claude CLI
- * (ou n'importe quel autre CLI) via pty-agent.
+ * (ou n'importe quel autre CLI) via ptyx.
  */
 
-import { createAgent, claude, middleware, fileLogger } from 'pty-agent';
+import { createAgent, claude, middleware, fileLogger } from 'ptyx';
 import { EventEmitter } from 'node:events';
 
 // ════════════════════════════════════════════════════════════════════
-// Bridge: Classe qui fait le pont entre moltbot et pty-agent
+// Bridge: Classe qui fait le pont entre moltbot et ptyx
 // ════════════════════════════════════════════════════════════════════
 
 export class AgentBridge extends EventEmitter {
@@ -158,7 +158,7 @@ async function moltbotExample() {
   
   // Simuler des messages de moltbot
   const questions = [
-    "Qu'est-ce que pty-agent?",
+    "Qu'est-ce que ptyx?",
     "Donne-moi un exemple de code.",
   ];
   

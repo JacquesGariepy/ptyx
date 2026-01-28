@@ -1,12 +1,12 @@
 /**
- * pty-agent
+ * ptyx
  *
  * Universal transparent PTY wrapper for any CLI.
  * Launch and control any command-line application invisibly.
  *
  * @example
  * ```typescript
- * import { createAgent, createWithAdapter, registerAdapter } from 'pty-agent';
+ * import { createAgent, createWithAdapter, registerAdapter } from 'ptyx';
  *
  * // Basic usage - wrap any CLI
  * const agent = await createAgent({
@@ -23,15 +23,15 @@
  * // With plugin loading
  * const agent = await createWithAdapter({
  *   command: 'claude',
- *   adapterPlugin: 'pty-agent-adapter-claude',
+ *   adapterPlugin: 'ptyx-adapter-claude',
  * });
  *
  * // Register adapters globally
- * import claudeAdapter from 'pty-agent/adapters/claude';
+ * import claudeAdapter from 'ptyx/adapters/claude';
  * registerAdapter(claudeAdapter);
  *
  * // Or register all builtins
- * import { registerBuiltins } from 'pty-agent/adapters/builtins';
+ * import { registerBuiltins } from 'ptyx/adapters/builtins';
  * registerBuiltins();
  *
  * // Intercept everything

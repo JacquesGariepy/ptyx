@@ -375,7 +375,7 @@ export class PtyAgent extends EventEmitter implements IAgent {
   
   private debug(message: string): void {
     if (this.config.debug) {
-      const prefix = `[pty-agent:${this.name}]`;
+      const prefix = `[ptyx:${this.name}]`;
       console.error(`${prefix} ${message}`);
     }
   }

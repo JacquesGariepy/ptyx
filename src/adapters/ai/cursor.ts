@@ -3,7 +3,7 @@
  * https://cursor.sh/
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/cursor cursor
+ * ptyx --adapter ptyx/adapters/ai/cursor cursor
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

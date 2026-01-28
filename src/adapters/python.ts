@@ -2,11 +2,11 @@
  * Python REPL Adapter
  *
  * Optional adapter for Python interactive interpreter.
- * Import from 'pty-agent/adapters/python'
+ * Import from 'ptyx/adapters/python'
  *
  * @example
- * import { registerAdapter } from 'pty-agent';
- * import pythonAdapter from 'pty-agent/adapters/python';
+ * import { registerAdapter } from 'ptyx';
+ * import pythonAdapter from 'ptyx/adapters/python';
  *
  * registerAdapter(pythonAdapter);
  */

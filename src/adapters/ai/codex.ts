@@ -3,7 +3,7 @@
  * https://github.com/openai/codex
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/codex codex
+ * ptyx --adapter ptyx/adapters/ai/codex codex
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';

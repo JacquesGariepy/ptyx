@@ -6,12 +6,12 @@
  *
  * @example
  * // Import all builtin adapters
- * import { builtinAdapters, registerBuiltins } from 'pty-agent/adapters/builtins';
+ * import { builtinAdapters, registerBuiltins } from 'ptyx/adapters/builtins';
  * registerBuiltins();
  *
  * // Or import individually
- * import claudeAdapter from 'pty-agent/adapters/claude';
- * import pythonAdapter from 'pty-agent/adapters/python';
+ * import claudeAdapter from 'ptyx/adapters/claude';
+ * import pythonAdapter from 'ptyx/adapters/python';
  */
 
 import { nodeAdapter } from './node.js';
@@ -27,7 +27,7 @@ export { bashAdapter } from './bash.js';
 
 /**
  * Builtin REPL/shell adapters
- * For AI CLI adapters, use 'pty-agent/adapters/ai'
+ * For AI CLI adapters, use 'ptyx/adapters/ai'
  */
 export const builtinAdapters: Adapter[] = [
   nodeAdapter,
@@ -39,7 +39,7 @@ export const builtinAdapters: Adapter[] = [
  * Register all builtin adapters at once
  *
  * @example
- * import { registerBuiltins } from 'pty-agent/adapters/builtins';
+ * import { registerBuiltins } from 'ptyx/adapters/builtins';
  * registerBuiltins();
  */
 export function registerBuiltins(): void {

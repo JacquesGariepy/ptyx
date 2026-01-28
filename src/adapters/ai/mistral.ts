@@ -1,23 +1,31 @@
 /**
- * Mistral AI CLI Adapter
- * https://mistral.ai/
+ * Mistral Vibe CLI Adapter
+ * https://docs.mistral.ai/mistral-vibe/introduction/install
+ *
+ * Install:
+ *   pip install mistral-vibe
+ *   # or
+ *   uv tool install mistral-vibe
+ *   # or
+ *   curl -LsSf https://mistral.ai/vibe/install.sh | bash
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/mistral mistral
+ * ptyx --builtins mistral-vibe
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';
 
 export const mistralAdapter: Adapter = {
-  name: 'mistral',
+  name: 'mistral-vibe',
 
   detect: (config: AgentConfig) => {
     const cmd = config.command.toLowerCase();
-    return cmd === 'mistral' ||
-           cmd === 'mistral-cli' ||
-           cmd.endsWith('/mistral') ||
-           cmd.endsWith('\\mistral') ||
-           cmd.includes('mistral');
+    const base = cmd.split(/[/\\]/).pop() || cmd;
+    return base === 'vibe' ||
+           base === 'mistral' ||
+           base === 'mistral-vibe' ||
+           base === 'vibe-acp' ||
+           base.startsWith('mistral');
   },
 
   configure: (config: AgentConfig) => ({

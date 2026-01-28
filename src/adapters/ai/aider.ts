@@ -3,7 +3,7 @@
  * https://aider.chat/
  *
  * @example
- * pty-agent --adapter pty-agent/adapters/ai/aider aider
+ * ptyx --adapter ptyx/adapters/ai/aider aider
  */
 
 import type { Adapter, AgentConfig, Message, Middleware } from '../../types.js';
