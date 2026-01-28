@@ -1,0 +1,104 @@
+{
+  "name": "pty-agent",
+  "version": "1.0.0",
+  "description": "Universal transparent PTY wrapper - Launch and control any CLI invisibly",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "pty-agent": "./dist/cli.js",
+    "pty-wrap": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./adapters": {
+      "types": "./dist/adapters.d.ts",
+      "import": "./dist/adapters.mjs",
+      "require": "./dist/adapters.js"
+    },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.mjs",
+      "require": "./dist/middleware.js"
+    },
+    "./adapters/builtins": {
+      "types": "./dist/adapters/builtins.d.ts",
+      "import": "./dist/adapters/builtins.mjs",
+      "require": "./dist/adapters/builtins.js"
+    },
+    "./adapters/claude": {
+      "types": "./dist/adapters/claude.d.ts",
+      "import": "./dist/adapters/claude.mjs",
+      "require": "./dist/adapters/claude.js"
+    },
+    "./adapters/node": {
+      "types": "./dist/adapters/node.d.ts",
+      "import": "./dist/adapters/node.mjs",
+      "require": "./dist/adapters/node.js"
+    },
+    "./adapters/python": {
+      "types": "./dist/adapters/python.d.ts",
+      "import": "./dist/adapters/python.mjs",
+      "require": "./dist/adapters/python.js"
+    },
+    "./adapters/bash": {
+      "types": "./dist/adapters/bash.d.ts",
+      "import": "./dist/adapters/bash.mjs",
+      "require": "./dist/adapters/bash.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "pty",
+    "pseudo-terminal",
+    "cli",
+    "wrapper",
+    "proxy",
+    "transparent",
+    "terminal",
+    "shell",
+    "process",
+    "spawn",
+    "agent",
+    "automation"
+  ],
+  "author": "Jacques Gariepy",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JacquesGariepy/pty-agent.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JacquesGariepy/pty-agent/issues"
+  },
+  "homepage": "https://github.com/JacquesGariepy/pty-agent#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "node-pty": ">=1.0.0",
+    "strip-ansi": "^7.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.0.0"
+  }
+}
