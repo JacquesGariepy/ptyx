@@ -30,11 +30,6 @@
       "import": "./dist/adapters/builtins.mjs",
       "require": "./dist/adapters/builtins.js"
     },
-    "./adapters/claude": {
-      "types": "./dist/adapters/claude.d.ts",
-      "import": "./dist/adapters/claude.mjs",
-      "require": "./dist/adapters/claude.js"
-    },
     "./adapters/node": {
       "types": "./dist/adapters/node.d.ts",
       "import": "./dist/adapters/node.mjs",
@@ -49,6 +44,111 @@
       "types": "./dist/adapters/bash.d.ts",
       "import": "./dist/adapters/bash.mjs",
       "require": "./dist/adapters/bash.js"
+    },
+    "./adapters/ai": {
+      "types": "./dist/adapters/ai.d.ts",
+      "import": "./dist/adapters/ai.mjs",
+      "require": "./dist/adapters/ai.js"
+    },
+    "./adapters/ai/claude": {
+      "types": "./dist/adapters/ai/claude.d.ts",
+      "import": "./dist/adapters/ai/claude.mjs",
+      "require": "./dist/adapters/ai/claude.js"
+    },
+    "./adapters/ai/copilot": {
+      "types": "./dist/adapters/ai/copilot.d.ts",
+      "import": "./dist/adapters/ai/copilot.mjs",
+      "require": "./dist/adapters/ai/copilot.js"
+    },
+    "./adapters/ai/amazonq": {
+      "types": "./dist/adapters/ai/amazonq.d.ts",
+      "import": "./dist/adapters/ai/amazonq.mjs",
+      "require": "./dist/adapters/ai/amazonq.js"
+    },
+    "./adapters/ai/gemini": {
+      "types": "./dist/adapters/ai/gemini.d.ts",
+      "import": "./dist/adapters/ai/gemini.mjs",
+      "require": "./dist/adapters/ai/gemini.js"
+    },
+    "./adapters/ai/ollama": {
+      "types": "./dist/adapters/ai/ollama.d.ts",
+      "import": "./dist/adapters/ai/ollama.mjs",
+      "require": "./dist/adapters/ai/ollama.js"
+    },
+    "./adapters/ai/aider": {
+      "types": "./dist/adapters/ai/aider.d.ts",
+      "import": "./dist/adapters/ai/aider.mjs",
+      "require": "./dist/adapters/ai/aider.js"
+    },
+    "./adapters/ai/openinterpreter": {
+      "types": "./dist/adapters/ai/openinterpreter.d.ts",
+      "import": "./dist/adapters/ai/openinterpreter.mjs",
+      "require": "./dist/adapters/ai/openinterpreter.js"
+    },
+    "./adapters/ai/llm": {
+      "types": "./dist/adapters/ai/llm.d.ts",
+      "import": "./dist/adapters/ai/llm.mjs",
+      "require": "./dist/adapters/ai/llm.js"
+    },
+    "./adapters/ai/cody": {
+      "types": "./dist/adapters/ai/cody.d.ts",
+      "import": "./dist/adapters/ai/cody.mjs",
+      "require": "./dist/adapters/ai/cody.js"
+    },
+    "./adapters/ai/cursor": {
+      "types": "./dist/adapters/ai/cursor.d.ts",
+      "import": "./dist/adapters/ai/cursor.mjs",
+      "require": "./dist/adapters/ai/cursor.js"
+    },
+    "./adapters/ai/chatgpt": {
+      "types": "./dist/adapters/ai/chatgpt.d.ts",
+      "import": "./dist/adapters/ai/chatgpt.mjs",
+      "require": "./dist/adapters/ai/chatgpt.js"
+    },
+    "./adapters/ai/codex": {
+      "types": "./dist/adapters/ai/codex.d.ts",
+      "import": "./dist/adapters/ai/codex.mjs",
+      "require": "./dist/adapters/ai/codex.js"
+    },
+    "./adapters/ai/continue": {
+      "types": "./dist/adapters/ai/continue.d.ts",
+      "import": "./dist/adapters/ai/continue.mjs",
+      "require": "./dist/adapters/ai/continue.js"
+    },
+    "./adapters/ai/goose": {
+      "types": "./dist/adapters/ai/goose.d.ts",
+      "import": "./dist/adapters/ai/goose.mjs",
+      "require": "./dist/adapters/ai/goose.js"
+    },
+    "./adapters/ai/vibeos": {
+      "types": "./dist/adapters/ai/vibeos.d.ts",
+      "import": "./dist/adapters/ai/vibeos.mjs",
+      "require": "./dist/adapters/ai/vibeos.js"
+    },
+    "./adapters/ai/opencode": {
+      "types": "./dist/adapters/ai/opencode.d.ts",
+      "import": "./dist/adapters/ai/opencode.mjs",
+      "require": "./dist/adapters/ai/opencode.js"
+    },
+    "./adapters/ai/mistral": {
+      "types": "./dist/adapters/ai/mistral.d.ts",
+      "import": "./dist/adapters/ai/mistral.mjs",
+      "require": "./dist/adapters/ai/mistral.js"
+    },
+    "./adapters/ai/perplexity": {
+      "types": "./dist/adapters/ai/perplexity.d.ts",
+      "import": "./dist/adapters/ai/perplexity.mjs",
+      "require": "./dist/adapters/ai/perplexity.js"
+    },
+    "./adapters/ai/tabby": {
+      "types": "./dist/adapters/ai/tabby.d.ts",
+      "import": "./dist/adapters/ai/tabby.mjs",
+      "require": "./dist/adapters/ai/tabby.js"
+    },
+    "./adapters/ai/codeium": {
+      "types": "./dist/adapters/ai/codeium.d.ts",
+      "import": "./dist/adapters/ai/codeium.mjs",
+      "require": "./dist/adapters/ai/codeium.js"
     }
   },
   "files": [
@@ -76,7 +176,17 @@
     "process",
     "spawn",
     "agent",
-    "automation"
+    "automation",
+    "ai",
+    "llm",
+    "claude",
+    "copilot",
+    "chatgpt",
+    "ollama",
+    "gemini",
+    "aider",
+    "cody",
+    "cursor"
   ],
   "author": "Jacques Gariepy",
   "license": "MIT",

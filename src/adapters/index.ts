@@ -14,24 +14,22 @@
  * import pythonAdapter from 'pty-agent/adapters/python';
  */
 
-import { claudeAdapter } from './claude.js';
 import { nodeAdapter } from './node.js';
 import { pythonAdapter } from './python.js';
 import { bashAdapter } from './bash.js';
 import { registerAdapters } from '../adapters.js';
 import type { Adapter } from '../types.js';
 
-// Re-export individual adapters
-export { claudeAdapter } from './claude.js';
+// Re-export individual adapters (REPL/shells only, AI adapters are in ./ai/)
 export { nodeAdapter } from './node.js';
 export { pythonAdapter } from './python.js';
 export { bashAdapter } from './bash.js';
 
 /**
- * All builtin adapters in recommended order
+ * Builtin REPL/shell adapters
+ * For AI CLI adapters, use 'pty-agent/adapters/ai'
  */
 export const builtinAdapters: Adapter[] = [
-  claudeAdapter,
   nodeAdapter,
   pythonAdapter,
   bashAdapter,
