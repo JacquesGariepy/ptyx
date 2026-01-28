@@ -72,4 +72,3 @@ export const lmstudioAdapter: Adapter = {
   ],
 };
 
-export default lmstudioAdapter;

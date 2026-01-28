@@ -53,4 +53,3 @@ export const codexAdapter: Adapter = {
   ],
 };
 
-export default codexAdapter;

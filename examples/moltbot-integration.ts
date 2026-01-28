@@ -1,22 +1,22 @@
 /**
- * Intégration moltbot avec ptyx
- * 
- * Ce fichier montre comment moltbot peut contrôler Claude CLI
- * (ou n'importe quel autre CLI) via ptyx.
+ * Integration example with ptyx
+ *
+ * This file shows how to control Claude CLI
+ * (or any other CLI) via ptyx.
  */
 
-import { createAgent, claude, middleware, fileLogger } from 'ptyx';
+import { createAgent, fileLogger } from 'ptyx';
 import { EventEmitter } from 'node:events';
 
 // ════════════════════════════════════════════════════════════════════
-// Bridge: Classe qui fait le pont entre moltbot et ptyx
+// Bridge: Class that bridges your app and ptyx
 // ════════════════════════════════════════════════════════════════════
 
 export class AgentBridge extends EventEmitter {
   private agent: Awaited<ReturnType<typeof createAgent>> | null = null;
   private responseBuffer = '';
   private isWaitingForResponse = false;
-  
+
   constructor(private options: {
     command: string;
     args?: string[];
@@ -25,9 +25,9 @@ export class AgentBridge extends EventEmitter {
   }) {
     super();
   }
-  
+
   /**
-   * Démarrer l'agent
+   * Start the agent
    */
   async start(): Promise<void> {
     this.agent = await createAgent({
@@ -36,77 +36,77 @@ export class AgentBridge extends EventEmitter {
       autoRestart: true,
       maxRestarts: 5,
     });
-    
-    // Logging optionnel
+
+    // Optional logging
     if (this.options.logFile) {
       this.agent.use(fileLogger({
         path: this.options.logFile,
         append: true,
       }));
     }
-    
-    // Écouter les messages sortants
+
+    // Listen for outgoing messages
     this.agent.on('message', (msg) => {
       if (msg.direction === 'out') {
         this.handleOutput(msg.text);
       }
     });
-    
+
     this.agent.on('exit', (code) => {
       this.emit('exit', code);
     });
-    
+
     this.agent.on('error', (err) => {
       this.emit('error', err);
     });
-    
-    // Attendre que l'agent soit prêt
+
+    // Wait for the agent to be ready
     await this.agent.wait(500);
-    
+
     this.emit('ready');
   }
-  
+
   /**
-   * Envoyer un message à l'agent
+   * Send a message to the agent
    */
   async send(message: string): Promise<string> {
     if (!this.agent) throw new Error('Agent not started');
-    
+
     return new Promise((resolve, reject) => {
       this.responseBuffer = '';
       this.isWaitingForResponse = true;
-      
+
       // Timeout
       const timeout = setTimeout(() => {
         this.isWaitingForResponse = false;
         reject(new Error('Response timeout'));
       }, 60000);
-      
-      // Écouter pour le prompt (fin de réponse)
+
+      // Listen for prompt (end of response)
       const checkPrompt = () => {
         const pattern = this.options.promptPattern || /[❯>$#]\s*$/;
         if (pattern.test(this.responseBuffer)) {
           clearTimeout(timeout);
           this.isWaitingForResponse = false;
-          
-          // Nettoyer la réponse (retirer le prompt)
+
+          // Clean the response (remove prompt)
           const response = this.responseBuffer
             .replace(pattern, '')
             .trim();
-          
+
           resolve(response);
         }
       };
-      
+
       this.on('output', checkPrompt);
-      
-      // Envoyer le message
+
+      // Send the message
       this.agent!.sendLine(message);
     });
   }
-  
+
   /**
-   * Gérer la sortie
+   * Handle output
    */
   private handleOutput(text: string): void {
     if (this.isWaitingForResponse) {
@@ -114,9 +114,9 @@ export class AgentBridge extends EventEmitter {
     }
     this.emit('output', text);
   }
-  
+
   /**
-   * Arrêter l'agent
+   * Stop the agent
    */
   async stop(): Promise<void> {
     if (this.agent) {
@@ -127,63 +127,63 @@ export class AgentBridge extends EventEmitter {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// Exemple d'utilisation dans moltbot
+// Usage example
 // ════════════════════════════════════════════════════════════════════
 
-async function moltbotExample() {
-  console.log('🤖 Démarrage du bridge moltbot <-> Claude...\n');
-  
-  // Créer le bridge pour Claude
+async function example() {
+  console.log('Starting bridge...\n');
+
+  // Create the bridge for Claude
   const bridge = new AgentBridge({
     command: 'claude',
     args: ['--model', 'claude-sonnet-4-20250514'],
-    logFile: 'moltbot-session.log',
+    logFile: 'session.log',
     promptPattern: /[❯>]\s*$/,
   });
-  
+
   bridge.on('ready', () => {
-    console.log('✅ Bridge prêt!\n');
+    console.log('Bridge ready!\n');
   });
-  
+
   bridge.on('output', (text) => {
     process.stdout.write(text);
   });
-  
+
   bridge.on('error', (err) => {
-    console.error('❌ Erreur:', err.message);
+    console.error('Error:', err.message);
   });
-  
-  // Démarrer
+
+  // Start
   await bridge.start();
-  
-  // Simuler des messages de moltbot
+
+  // Simulate messages
   const questions = [
-    "Qu'est-ce que ptyx?",
-    "Donne-moi un exemple de code.",
+    "What is ptyx?",
+    "Give me a code example.",
   ];
-  
+
   for (const q of questions) {
-    console.log(`\n\n>>> moltbot envoie: "${q}"\n`);
-    
+    console.log(`\n\n>>> Sending: "${q}"\n`);
+
     try {
       const response = await bridge.send(q);
-      console.log('\n<<< Réponse reçue (', response.length, 'chars)');
+      console.log('\n<<< Response received (', response.length, 'chars)');
     } catch (err) {
-      console.error('Erreur:', err);
+      console.error('Error:', err);
     }
   }
-  
-  // Arrêter
+
+  // Stop
   await bridge.stop();
-  console.log('\n\n🛑 Bridge arrêté');
+  console.log('\n\nBridge stopped');
 }
 
 // ════════════════════════════════════════════════════════════════════
-// Factory functions pour moltbot
+// Factory functions
 // ════════════════════════════════════════════════════════════════════
 
 /**
- * Créer un agent Claude pour moltbot
+ * Create a Claude agent
  */
 export async function createClaudeAgent(options?: {
   model?: string;
@@ -198,7 +198,7 @@ export async function createClaudeAgent(options?: {
 }
 
 /**
- * Créer un agent Python pour moltbot
+ * Create a Python agent
  */
 export async function createPythonAgent(script?: string) {
   return new AgentBridge({
@@ -209,7 +209,7 @@ export async function createPythonAgent(script?: string) {
 }
 
 /**
- * Créer un agent Shell pour moltbot
+ * Create a Shell agent
  */
 export async function createShellAgent() {
   return new AgentBridge({
@@ -219,7 +219,7 @@ export async function createShellAgent() {
   });
 }
 
-// Run si exécuté directement
+// Run if executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  moltbotExample().catch(console.error);
+  example().catch(console.error);
 }

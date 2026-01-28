@@ -37,4 +37,3 @@ export const cursorAdapter: Adapter = {
   },
 };
 
-export default cursorAdapter;

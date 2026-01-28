@@ -10,14 +10,14 @@
  * registerBuiltins();
  *
  * // Or import individually
- * import claudeAdapter from 'ptyx/adapters/claude';
- * import pythonAdapter from 'ptyx/adapters/python';
+ * import { nodeAdapter } from 'ptyx/adapters/builtins';
+ * import { claudeAdapter } from 'ptyx/adapters/ai';
  */
 
 import { nodeAdapter } from './node.js';
 import { pythonAdapter } from './python.js';
 import { bashAdapter } from './bash.js';
-import { registerAdapters } from '../adapters.js';
+import { registerAdapters } from '../registry.js';
 import type { Adapter } from '../types.js';
 
 // Re-export individual adapters (REPL/shells only, AI adapters are in ./ai/)
@@ -46,4 +46,4 @@ export function registerBuiltins(): void {
   registerAdapters(builtinAdapters);
 }
 
-export default builtinAdapters;
+// Note: No default export to avoid bundler warnings about mixed exports

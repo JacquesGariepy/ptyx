@@ -67,4 +67,3 @@ export const claudeAdapter: Adapter = {
   ],
 };
 
-export default claudeAdapter;

@@ -66,4 +66,3 @@ export const geminiAdapter: Adapter = {
   ],
 };
 
-export default geminiAdapter;

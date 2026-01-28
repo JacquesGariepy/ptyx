@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * TEST RAPIDE - Vérifie que ptyx fonctionne
+ * QUICK TEST - Verify ptyx works
  *
- * Lancer:
+ * Run:
  *   cd ptyx
  *   npm install
  *   node examples/test-quick.mjs
@@ -10,10 +10,10 @@
 
 import { createAgent } from '../dist/index.mjs';
 
-console.log('🧪 Test rapide de ptyx\n');
+console.log('Quick test of ptyx\n');
 
-// Test 1: Lancer bash
-console.log('Test 1: Lancer bash...');
+// Test 1: Run bash
+console.log('Test 1: Running bash...');
 try {
   const bash = await createAgent({
     command: 'bash',
@@ -28,13 +28,13 @@ try {
   await bash.wait(1000);
   await bash.dispose();
 
-  console.log('✅ Bash OK:', output.trim().slice(0, 50));
+  console.log('Bash OK:', output.trim().slice(0, 50));
 } catch (err) {
-  console.log('❌ Bash erreur:', err.message);
+  console.log('Bash error:', err.message);
 }
 
-// Test 2: Lancer Python (si disponible)
-console.log('\nTest 2: Lancer Python...');
+// Test 2: Run Python (if available)
+console.log('\nTest 2: Running Python...');
 try {
   const py = await createAgent({
     command: 'python3',
@@ -49,13 +49,13 @@ try {
   await py.wait(1000);
   await py.dispose();
 
-  console.log('✅ Python OK:', output.trim());
+  console.log('Python OK:', output.trim());
 } catch (err) {
-  console.log('⚠️  Python non disponible:', err.message);
+  console.log('Python not available:', err.message);
 }
 
-// Test 3: Vérifier Claude (sans le lancer vraiment)
-console.log('\nTest 3: Vérifier Claude CLI...');
+// Test 3: Check Claude (without actually launching it)
+console.log('\nTest 3: Checking Claude CLI...');
 try {
   const which = await createAgent({
     command: 'which',
@@ -71,16 +71,16 @@ try {
   await which.dispose();
 
   if (output.trim()) {
-    console.log('✅ Claude trouvé:', output.trim());
+    console.log('Claude found:', output.trim());
   } else {
-    console.log('⚠️  Claude CLI non trouvé dans PATH');
+    console.log('Claude CLI not found in PATH');
   }
 } catch (err) {
-  console.log('⚠️  Claude CLI non trouvé');
+  console.log('Claude CLI not found');
 }
 
-console.log('\n✨ Tests terminés!\n');
-console.log('Pour utiliser avec Claude:');
+console.log('\nTests completed!\n');
+console.log('To use with Claude:');
 console.log('  import { createWithAdapter } from "ptyx";');
 console.log('  import { registerAiAdapters } from "ptyx/adapters/ai";');
 console.log('  registerAiAdapters();');

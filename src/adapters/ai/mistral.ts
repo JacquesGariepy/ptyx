@@ -74,4 +74,3 @@ export const mistralAdapter: Adapter = {
   ],
 };
 
-export default mistralAdapter;

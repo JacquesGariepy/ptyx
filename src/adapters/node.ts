@@ -6,7 +6,7 @@
  *
  * @example
  * import { registerAdapter } from 'ptyx';
- * import nodeAdapter from 'ptyx/adapters/node';
+ * import { nodeAdapter } from 'ptyx/adapters/node';
  *
  * registerAdapter(nodeAdapter);
  */
@@ -30,4 +30,3 @@ export const nodeAdapter: Adapter = {
   },
 };
 
-export default nodeAdapter;

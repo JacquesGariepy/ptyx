@@ -6,7 +6,7 @@
  *
  * @example
  * import { registerAdapter } from 'ptyx';
- * import pythonAdapter from 'ptyx/adapters/python';
+ * import { pythonAdapter } from 'ptyx/adapters/python';
  *
  * registerAdapter(pythonAdapter);
  */
@@ -30,4 +30,3 @@ export const pythonAdapter: Adapter = {
   },
 };
 
-export default pythonAdapter;

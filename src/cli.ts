@@ -19,12 +19,16 @@ import { PtyAgent } from './agent.js';
 import { loadAdapterPlugin, loadAdapterPlugins, findAdapter } from './adapters.js';
 import { fileLogger, logger } from './middleware.js';
 import { getTerminalSize } from './utils.js';
+import { createLogger } from './logger.js';
+
+// CLI logger
+const log = createLogger('cli');
 
 const args = process.argv.slice(2);
 
 // Show help
 if (args.length === 0 || args[0] === '--help' || args[0] === '-h') {
-  console.log(`
+  log.print(`
 ptyx - Transparent PTY wrapper with plugin adapters
 
 Usage:
@@ -60,7 +64,7 @@ Environment:
 }
 
 if (args[0] === '--version' || args[0] === '-v') {
-  console.log('1.0.0');
+  log.print('1.0.0');
   process.exit(0);
 }
 
@@ -100,12 +104,12 @@ const command = args[commandStartIdx];
 const cmdArgs = args.slice(commandStartIdx + 1);
 
 if (!command) {
-  console.error('Error: No command specified');
+  log.error('No command specified');
   process.exit(1);
 }
 
-// Environment options
-const debug = process.env.PTYX_DEBUG === '1';
+// Environment options - use centralized logger detection
+const debug = log.isDebugEnabled();
 const logFile = process.env.PTYX_LOG;
 
 async function main() {
@@ -114,21 +118,17 @@ async function main() {
     try {
       const { registerBuiltins } = await import('./adapters/index.js');
       registerBuiltins();
-      if (debug) {
-        console.error('[ptyx] Loaded REPL adapters (node, python, bash)');
-      }
+      log.debug('Loaded REPL adapters (node, python, bash)');
     } catch (err) {
-      console.error(`[ptyx] Failed to load REPL adapters: ${err}`);
+      log.error(`Failed to load REPL adapters: ${err}`);
     }
 
     try {
       const { registerAiAdapters } = await import('./adapters/ai/index.js');
       registerAiAdapters();
-      if (debug) {
-        console.error('[ptyx] Loaded AI adapters (claude, copilot, q, gemini, etc.)');
-      }
+      log.debug('Loaded AI adapters (claude, copilot, q, gemini, etc.)');
     } catch (err) {
-      console.error(`[ptyx] Failed to load AI adapters: ${err}`);
+      log.error(`Failed to load AI adapters: ${err}`);
     }
   }
 
@@ -136,11 +136,9 @@ async function main() {
   if (adapterPaths.length > 0) {
     try {
       await loadAdapterPlugins(adapterPaths);
-      if (debug) {
-        console.error(`[ptyx] Loaded adapters: ${adapterPaths.join(', ')}`);
-      }
+      log.debug(`Loaded adapters: ${adapterPaths.join(', ')}`);
     } catch (err) {
-      console.error(`[ptyx] Failed to load adapters: ${err}`);
+      log.error(`Failed to load adapters: ${err}`);
       process.exit(1);
     }
   }
@@ -165,9 +163,7 @@ async function main() {
     finalConfig = adapter.configure(config);
   }
 
-  if (debug) {
-    console.error(`[ptyx] Using adapter: ${adapter.name}`);
-  }
+  log.debug(`Using adapter: ${adapter.name}`);
 
   const agent = new PtyAgent(finalConfig);
 
@@ -183,9 +179,7 @@ async function main() {
     agent.use(logger({
       input: true,
       output: true,
-      logger: (dir, text) => {
-        process.stderr.write(`[ptyx] ${dir} ${text}\n`);
-      },
+      logger: (dir, text) => log.debug(`${dir} ${text}`),
     }));
   }
 
@@ -223,9 +217,7 @@ async function main() {
 
   // Handle errors gracefully
   agent.on('error', (err) => {
-    if (debug) {
-      process.stderr.write(`[ptyx error] ${err.message}\n`);
-    }
+    log.error(`Agent error: ${err.message}`);
   });
 
   // Cleanup on signals
@@ -242,13 +234,13 @@ async function main() {
   try {
     await agent.spawn();
   } catch (err) {
-    process.stderr.write(`Failed to start: ${command}\n`);
-    process.stderr.write(`Error: ${err}\n`);
+    log.error(`Failed to start: ${command}`);
+    log.error(`Error: ${err}`);
     process.exit(1);
   }
 }
 
 main().catch((err) => {
-  process.stderr.write(`Fatal: ${err}\n`);
+  log.error(`Fatal: ${err}`);
   process.exit(1);
 });

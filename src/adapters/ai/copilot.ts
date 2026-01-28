@@ -53,4 +53,3 @@ export const copilotAdapter: Adapter = {
   ],
 };
 
-export default copilotAdapter;

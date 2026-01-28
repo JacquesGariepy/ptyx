@@ -9,11 +9,11 @@
  * registerAiAdapters();
  *
  * // Or import individually
- * import claudeAdapter from 'ptyx/adapters/ai/claude';
- * import ollamaAdapter from 'ptyx/adapters/ai/ollama';
+ * import { claudeAdapter } from 'ptyx/adapters/ai/claude';
+ * import { ollamaAdapter } from 'ptyx/adapters/ai/ollama';
  */
 
-import { registerAdapters } from '../../adapters.js';
+import { registerAdapters } from '../../registry.js';
 import type { Adapter } from '../../types.js';
 
 // Individual adapter imports
@@ -80,4 +80,4 @@ export function registerAiAdapters(): void {
   registerAdapters(aiAdapters);
 }
 
-export default aiAdapters;
+// Note: No default export to avoid bundler warnings about mixed exports

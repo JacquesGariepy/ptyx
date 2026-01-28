@@ -1,5 +1,9 @@
 import type { Middleware, MiddlewareFn, Message, Context } from './types.js';
 import * as fs from 'node:fs';
+import { createLogger } from './logger.js';
+
+// Default logger for middleware
+const defaultLog = createLogger('middleware');
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Middleware Factory
@@ -41,7 +45,7 @@ export function logger(options: LogOptions = {}): Middleware {
   const {
     input = true,
     output = true,
-    logger: log = console.log,
+    logger: log = (dir: string, text: string) => defaultLog.info(`${dir} ${text}`),
     timestamps = true,
     maxLength = 200,
   } = options;
@@ -60,8 +64,8 @@ export function logger(options: LogOptions = {}): Middleware {
         const text = msg.text.length > maxLength
           ? msg.text.slice(0, maxLength) + '...'
           : msg.text;
-        
-        log(`${ts}${dir} ${text.replace(/\n/g, '\\n')}`);
+
+        log(dir, `${ts}${text.replace(/\n/g, '\\n')}`);
       }
       
       await next();
@@ -400,6 +404,177 @@ export function stealth(): Middleware {
       await next();
     },
     2
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Metrics Middleware
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface MetricsData {
+  /** Count of input messages */
+  messagesIn: number;
+  /** Count of output messages */
+  messagesOut: number;
+  /** Total bytes received as input */
+  bytesIn: number;
+  /** Total bytes sent as output */
+  bytesOut: number;
+  /** Recent latencies in ms (input to output) */
+  latencies: number[];
+  /** Session start time */
+  startTime: number;
+  /** Count of errors */
+  errors: number;
+}
+
+export interface MetricsOptions {
+  /** Track latency for input->output pairs */
+  trackLatency?: boolean;
+  /** Max latency samples to keep */
+  maxLatencySamples?: number;
+  /** Callback when metrics update */
+  onUpdate?: (metrics: MetricsData) => void;
+}
+
+/**
+ * Metrics middleware for performance monitoring
+ */
+export function metrics(options: MetricsOptions = {}): Middleware & {
+  getMetrics: () => MetricsData;
+  reset: () => void;
+} {
+  const { trackLatency = true, maxLatencySamples = 100, onUpdate } = options;
+
+  const data: MetricsData = {
+    messagesIn: 0,
+    messagesOut: 0,
+    bytesIn: 0,
+    bytesOut: 0,
+    latencies: [],
+    startTime: Date.now(),
+    errors: 0,
+  };
+
+  let lastInputTime = 0;
+
+  const mw = middleware(
+    'metrics',
+    'both',
+    async (msg, ctx, next) => {
+      try {
+        if (msg.direction === 'in') {
+          data.messagesIn++;
+          data.bytesIn += msg.raw.length;
+          if (trackLatency) lastInputTime = Date.now();
+        } else {
+          data.messagesOut++;
+          data.bytesOut += msg.raw.length;
+          if (trackLatency && lastInputTime > 0) {
+            const latency = Date.now() - lastInputTime;
+            data.latencies.push(latency);
+            if (data.latencies.length > maxLatencySamples) {
+              data.latencies.shift();
+            }
+            lastInputTime = 0;
+          }
+        }
+
+        onUpdate?.({ ...data, latencies: [...data.latencies] });
+        await next();
+      } catch (err) {
+        data.errors++;
+        throw err;
+      }
+    },
+    5 // High priority
+  );
+
+  return {
+    ...mw,
+    getMetrics: () => ({ ...data, latencies: [...data.latencies] }),
+    reset: () => {
+      data.messagesIn = 0;
+      data.messagesOut = 0;
+      data.bytesIn = 0;
+      data.bytesOut = 0;
+      data.latencies = [];
+      data.startTime = Date.now();
+      data.errors = 0;
+    },
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Audit Middleware
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface AuditLogEntry {
+  /** ISO timestamp */
+  timestamp: string;
+  /** Agent ID */
+  agentId: string;
+  /** Agent name */
+  agentName: string;
+  /** Message direction */
+  direction: 'in' | 'out';
+  /** Hash of the content (for integrity) */
+  dataHash: string;
+  /** Content length */
+  dataLength: number;
+  /** Sequence number */
+  seq: number;
+  /** Optional metadata */
+  meta?: Record<string, unknown>;
+}
+
+export interface AuditOptions {
+  /** Write audit log entry */
+  writer: (entry: AuditLogEntry) => void | Promise<void>;
+  /** Include message metadata */
+  includeMeta?: boolean;
+  /** Custom hash function (default: simple hash) */
+  hashFn?: (data: string) => string;
+}
+
+/**
+ * Simple hash function for audit logging
+ */
+function simpleHash(data: string): string {
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(16).padStart(8, '0');
+}
+
+/**
+ * Audit logging middleware for compliance and security
+ */
+export function audit(options: AuditOptions): Middleware {
+  const { writer, includeMeta = false, hashFn = simpleHash } = options;
+
+  return middleware(
+    'audit',
+    'both',
+    async (msg, ctx, next) => {
+      const entry: AuditLogEntry = {
+        timestamp: new Date(msg.ts).toISOString(),
+        agentId: msg.agentId,
+        agentName: ctx.agent.name,
+        direction: msg.direction,
+        dataHash: hashFn(msg.raw),
+        dataLength: msg.raw.length,
+        seq: msg.seq,
+        ...(includeMeta && Object.keys(msg.meta).length > 0 ? { meta: msg.meta } : {}),
+      };
+
+      await writer(entry);
+      await next();
+    },
+    2 // Very high priority - runs before most other middleware
   );
 }
 

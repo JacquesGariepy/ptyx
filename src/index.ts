@@ -26,11 +26,15 @@
  *   adapterPlugin: 'ptyx-adapter-claude',
  * });
  *
- * // Register adapters globally
- * import claudeAdapter from 'ptyx/adapters/claude';
+ * // Register AI adapters
+ * import { claudeAdapter } from 'ptyx/adapters/ai';
  * registerAdapter(claudeAdapter);
  *
- * // Or register all builtins
+ * // Or register all AI adapters at once
+ * import { registerAiAdapters } from 'ptyx/adapters/ai';
+ * registerAiAdapters();
+ *
+ * // Or register REPL builtins (node, python, bash)
  * import { registerBuiltins } from 'ptyx/adapters/builtins';
  * registerBuiltins();
  *
@@ -88,7 +92,40 @@ export {
   recorder,
   filter,
   stealth,
+  metrics,
+  audit,
 } from './middleware.js';
+
+// Session Management
+export {
+  SessionRecorder,
+  SessionPlayer,
+  createSessionRecorder,
+  createSessionPlayer,
+} from './session.js';
+
+// Streams API
+export {
+  createReadStream,
+  createWriteStream,
+  createDuplexStream,
+  pipeOutput,
+  pipeInput,
+  connectStdio,
+  collectOutput,
+} from './streams.js';
+
+// Agent Pool
+export {
+  AgentPool,
+  createAgentPool,
+} from './pool.js';
+
+// WebSocket Server
+export {
+  PtyServer,
+  createServer,
+} from './server.js';
 
 // Utilities
 export {
@@ -104,6 +141,16 @@ export {
   isTTY,
   getTerminalSize,
 } from './utils.js';
+
+// Logger
+export {
+  createLogger,
+  setLogLevel,
+  getLogLevel,
+  LogLevel,
+  defaultLogger,
+  type Logger,
+} from './logger.js';
 
 // Types
 export type {
@@ -125,3 +172,75 @@ export type {
   CreateWithAdapterOptions,
   PluginModule,
 } from './adapters.js';
+
+// Enhanced API Types
+export type {
+  ExpectOptions,
+  ExpectResult,
+  WaitForAnyResult,
+  HealthcheckResult,
+} from './types.js';
+
+// Middleware Types
+export type {
+  LogOptions,
+  FileLogOptions,
+  InterceptOptions,
+  InjectOptions,
+  RateLimitOptions,
+  BufferOptions,
+  RecorderOptions,
+  MetricsData,
+  MetricsOptions,
+  AuditLogEntry,
+  AuditOptions,
+} from './middleware.js';
+
+// Session Types
+export type {
+  SessionData,
+  SessionMessage,
+  ExportFormat,
+} from './session.js';
+
+// Streams Types
+export type {
+  ReadStreamOptions,
+  WriteStreamOptions,
+  DuplexStreamOptions,
+} from './streams.js';
+
+// Pool Types
+export type {
+  PoolConfig,
+  PoolEvents,
+  PoolStats,
+} from './pool.js';
+
+// Server Types
+export type {
+  ServerConfig,
+  ClientMessage,
+  ServerMessage,
+  ServerEvents,
+} from './server.js';
+
+// Terminal Detection & Emulation
+export {
+  detectTerminal,
+  detectProfile,
+  createTerminalEmulator,
+  createTerminalEnv,
+  applyTerminalEnv,
+  supportsFeature,
+  getCapabilities,
+  createProfile,
+  TerminalProfiles,
+} from './terminal.js';
+
+// Terminal Types
+export type {
+  TerminalInfo,
+  TerminalProfile,
+  TerminalEmulatorOptions,
+} from './terminal.js';

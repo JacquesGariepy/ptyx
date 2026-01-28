@@ -53,4 +53,3 @@ export const opencodeAdapter: Adapter = {
   ],
 };
 
-export default opencodeAdapter;

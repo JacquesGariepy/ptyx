@@ -6,7 +6,7 @@
  *
  * @example
  * import { registerAdapter } from 'ptyx';
- * import bashAdapter from 'ptyx/adapters/bash';
+ * import { bashAdapter } from 'ptyx/adapters/bash';
  *
  * registerAdapter(bashAdapter);
  */
@@ -32,4 +32,3 @@ export const bashAdapter: Adapter = {
   },
 };
 
-export default bashAdapter;

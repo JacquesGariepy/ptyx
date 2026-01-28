@@ -238,7 +238,23 @@ export interface Agent extends EventEmitter {
   clear(): void;
   wait(ms: number): Promise<void>;
   waitFor(pattern: RegExp | string, timeout?: number): Promise<Message>;
-  
+
+  // Enhanced API
+  /** Wait for pattern and return match details (pexpect-like) */
+  expect(pattern: RegExp | string, options?: ExpectOptions): Promise<ExpectResult>;
+  /** Wait for ALL patterns to match (in any order) */
+  waitForAll(patterns: (RegExp | string)[], timeout?: number): Promise<Message[]>;
+  /** Wait for FIRST pattern to match */
+  waitForAny(patterns: (RegExp | string)[], timeout?: number): Promise<WaitForAnyResult>;
+  /** Wait for no output for specified duration */
+  waitForIdle(idleMs?: number, timeout?: number): Promise<void>;
+  /** Send special keys (ctrl+c, enter, escape, etc.) */
+  sendKeys(keys: string | string[]): void;
+  /** Send data without logging (for passwords) */
+  sendSecret(data: string): void;
+  /** Check agent health status */
+  healthcheck(): Promise<HealthcheckResult>;
+
   // Events (typed)
   on<K extends keyof AgentEvents>(event: K, listener: AgentEvents[K]): this;
   off<K extends keyof AgentEvents>(event: K, listener: AgentEvents[K]): this;
@@ -283,6 +299,62 @@ export interface ToolCall {
   name: string;
   args?: Record<string, unknown>;
   raw: string;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Enhanced API Types
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Options for expect() method
+ */
+export interface ExpectOptions {
+  /** Timeout in ms (defaults to agent timeout) */
+  timeout?: number;
+  /** Echo matched content to debug */
+  echo?: boolean;
+}
+
+/**
+ * Result from expect() method
+ */
+export interface ExpectResult {
+  /** The regex match result */
+  match: RegExpMatchArray | null;
+  /** Content before the match */
+  before: string;
+  /** Content after the match */
+  after: string;
+}
+
+/**
+ * Result from waitForAny() method
+ */
+export interface WaitForAnyResult {
+  /** The pattern that matched */
+  pattern: RegExp | string;
+  /** The message that matched */
+  message: Message;
+  /** Index of the pattern in the original array */
+  index: number;
+}
+
+/**
+ * Result from healthcheck() method
+ */
+export interface HealthcheckResult {
+  /** Is the agent healthy and responsive */
+  healthy: boolean;
+  /** Is the process currently running */
+  running: boolean;
+  /** Process ID if running */
+  pid: number | undefined;
+  /** Time since agent creation in ms */
+  uptime: number;
+  /** Number of messages in history */
+  messageCount: number;
+  /** Node.js memory usage */
+  memoryUsage?: NodeJS.MemoryUsage;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

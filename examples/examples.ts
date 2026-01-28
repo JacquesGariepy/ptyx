@@ -1,23 +1,23 @@
 /**
- * ptyx - Exemples pratiques (nouvelle architecture)
+ * ptyx - Practical Examples (new architecture)
  *
  * Installation:
  *   npm install ptyx
  *
- * La nouvelle architecture utilise l'injection d'adapters:
- *   - Aucun adapter hardcodé dans le package principal
- *   - Adapters optionnels dans 'ptyx/adapters/*'
- *   - Support plugins npm et fichiers locaux
+ * The new architecture uses adapter injection:
+ *   - No hardcoded adapters in main package
+ *   - Optional adapters in 'ptyx/adapters/*'
+ *   - Support for npm plugins and local files
  */
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 1: Usage basique - Sans adapter (generic)
+// EXAMPLE 1: Basic usage - Without adapter (generic)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { createAgent } from 'ptyx';
 
-async function exempleBasique() {
-  // Lancer n'importe quel CLI sans adapter spécifique
+async function basicExample() {
+  // Launch any CLI without specific adapter
   const agent = await createAgent({
     command: 'node',
     args: ['-e', 'console.log("Hello from ptyx!")'],
@@ -34,22 +34,19 @@ async function exempleBasique() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 2: Avec builtin adapters
+// EXAMPLE 2: With builtin adapters
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import { createWithAdapter, registerAdapter } from 'ptyx';
-// Import optionnel des adapters builtin
-import claudeAdapter from 'ptyx/adapters/claude';
-import { registerBuiltins } from 'ptyx/adapters/builtins';
+// Import AI adapters from 'ptyx/adapters/ai'
+import { claudeAdapter } from 'ptyx/adapters/ai';
 
-async function exempleAvecBuiltins() {
-  // Option A: Enregistrer un seul adapter
+async function builtinsExample() {
+  // Register Claude adapter
+  // You can also use: import { registerAiAdapters } from 'ptyx/adapters/ai'; registerAiAdapters();
   registerAdapter(claudeAdapter);
 
-  // Option B: Enregistrer tous les builtins
-  // registerBuiltins();
-
-  // Créer agent - l'adapter est auto-détecté
+  // Create agent - adapter is auto-detected
   const ai = await createWithAdapter({
     command: 'claude',
     args: ['--model', 'claude-sonnet-4-20250514'],
@@ -61,19 +58,19 @@ async function exempleAvecBuiltins() {
     }
   });
 
-  ai.sendLine('Bonjour! Dis juste "OK".');
+  ai.sendLine('Hello! Just say "OK".');
   await ai.waitFor(/[❯>]\s*$/, 30000);
   await ai.dispose();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 3: Injection directe d'adapter
+// EXAMPLE 3: Direct adapter injection
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, defineAdapter } from 'ptyx';
+import { defineAdapter } from 'ptyx';
 
-async function exempleInjection() {
-  // Définir un adapter custom inline
+async function injectionExample() {
+  // Define a custom inline adapter
   const myAdapter = defineAdapter({
     name: 'my-repl',
     detect: (config) => config.command.includes('python'),
@@ -81,15 +78,15 @@ async function exempleInjection() {
     isReady: (msg) => msg.text.includes('Python'),
   });
 
-  // Injecter directement l'adapter
+  // Inject adapter directly
   const agent = await createWithAdapter({
     command: 'python3',
     args: ['-i'],
-    adapter: myAdapter, // Injection directe
+    adapter: myAdapter, // Direct injection
   });
 
   agent.on('ready', () => {
-    console.log('Python REPL prêt!');
+    console.log('Python REPL ready!');
     agent.sendLine('print("Hello!")');
   });
 
@@ -99,19 +96,19 @@ async function exempleInjection() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 4: Chargement de plugin
+// EXAMPLE 4: Plugin loading
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, loadAdapterPlugin } from 'ptyx';
+import { loadAdapterPlugin } from 'ptyx';
 
-async function exemplePlugin() {
-  // Option A: Charger et enregistrer manuellement
+async function pluginExample() {
+  // Option A: Load and register manually
   await loadAdapterPlugin('./my-adapter.js');
 
-  // Option B: Charger via config
+  // Option B: Load via config
   const agent = await createWithAdapter({
     command: 'my-cli',
-    adapterPlugin: './my-adapter.js', // Charge automatiquement
+    adapterPlugin: './my-adapter.js', // Auto-loads
   });
 
   await agent.wait(1000);
@@ -119,23 +116,23 @@ async function exemplePlugin() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 5: Multi-agents avec adapters différents
+// EXAMPLE 5: Multi-agents with different adapters
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, registerAdapters } from 'ptyx';
+import { registerAdapters } from 'ptyx';
 import { builtinAdapters } from 'ptyx/adapters/builtins';
 
-async function exempleMultiAgents() {
-  // Enregistrer tous les builtins
+async function multiAgentsExample() {
+  // Register all REPL builtins (node, python, bash)
   registerAdapters(builtinAdapters);
 
-  // Créer plusieurs agents
+  // Create multiple agents
   const [nodeAgent, pythonAgent] = await Promise.all([
     createWithAdapter({ command: 'node', args: ['-i'], name: 'node' }),
     createWithAdapter({ command: 'python3', args: ['-i'], name: 'python' }),
   ]);
 
-  // Écouter tous les agents
+  // Listen to all agents
   for (const agent of [nodeAgent, pythonAgent]) {
     agent.on('message', (msg) => {
       if (msg.direction === 'out') {
@@ -152,12 +149,12 @@ async function exempleMultiAgents() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 6: Adapter avec middleware custom
+// EXAMPLE 6: Adapter with custom middleware
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createWithAdapter, defineAdapter, type Middleware } from 'ptyx';
+import type { Middleware } from 'ptyx';
 
-async function exempleMiddleware() {
+async function middlewareExample() {
   const adapterWithMiddleware = defineAdapter({
     name: 'logging-cli',
     detect: () => true,
@@ -187,19 +184,17 @@ async function exempleMiddleware() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXEMPLE 7: Pattern Observer - Events typés
+// EXAMPLE 7: Observer pattern - Typed events
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import { createAgent } from 'ptyx';
-
-async function exempleEvents() {
+async function eventsExample() {
   const agent = await createAgent({
     command: 'node',
     args: ['-i'],
     debug: true,
   });
 
-  // Tous les events disponibles
+  // All available events
   agent.on('spawn', (pid) => console.log(`Spawned: PID ${pid}`));
   agent.on('ready', () => console.log('Ready for input'));
   agent.on('message', (msg) => console.log(`Message: ${msg.direction}`));
@@ -213,33 +208,109 @@ async function exempleEvents() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Lancer un exemple
+// EXAMPLE 8: Using middleware utilities
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const exemple = process.argv[2] || 'basique';
+import { logger, fileLogger, interceptor, recorder } from 'ptyx';
 
-const exemples: Record<string, () => Promise<void>> = {
-  basique: exempleBasique,
-  builtins: exempleAvecBuiltins,
-  injection: exempleInjection,
-  plugin: exemplePlugin,
-  multi: exempleMultiAgents,
-  middleware: exempleMiddleware,
-  events: exempleEvents,
+async function middlewareUtilitiesExample() {
+  const agent = await createAgent({
+    command: 'node',
+    args: ['-i'],
+  });
+
+  // Log to console
+  agent.use(logger({
+    input: true,
+    output: true,
+    timestamps: true,
+  }));
+
+  // Log to file
+  agent.use(fileLogger({
+    path: 'session.log',
+    append: true,
+  }));
+
+  // Transform/filter messages
+  agent.use(interceptor({
+    transformIn: (msg) => {
+      msg.meta.timestamp = Date.now();
+      return msg;
+    },
+    block: [/password/i], // Block sensitive patterns
+  }));
+
+  // Record session for replay
+  const rec = recorder({ maxSize: 1000 });
+  agent.use(rec);
+
+  agent.sendLine('console.log("Hello")');
+  await agent.wait(1000);
+
+  console.log('Recording:', rec.getRecording().length, 'messages');
+  await agent.dispose();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// EXAMPLE 9: AI CLI with all adapters
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import { registerAiAdapters, aiAdapters } from 'ptyx/adapters/ai';
+
+async function aiAdaptersExample() {
+  // Register all AI CLI adapters at once
+  // Includes: claude, copilot, gemini, mistral, ollama, lmstudio,
+  //           aider, cursor, vibeos, opencode, codex
+  registerAiAdapters();
+
+  console.log('Available AI adapters:', aiAdapters.map(a => a.name).join(', '));
+
+  // Now any AI CLI is auto-detected
+  const agent = await createWithAdapter({
+    command: 'claude',
+  });
+
+  agent.on('ready', () => {
+    console.log('AI CLI ready!');
+  });
+
+  await agent.wait(2000);
+  await agent.dispose();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Run an example
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const example = process.argv[2] || 'basic';
+
+const examples: Record<string, () => Promise<void>> = {
+  basic: basicExample,
+  builtins: builtinsExample,
+  injection: injectionExample,
+  plugin: pluginExample,
+  multi: multiAgentsExample,
+  middleware: middlewareExample,
+  events: eventsExample,
+  utils: middlewareUtilitiesExample,
+  ai: aiAdaptersExample,
 };
 
-if (exemples[exemple]) {
-  console.log(`\nLancement exemple: ${exemple}\n`);
-  exemples[exemple]().catch(console.error);
+if (examples[example]) {
+  console.log(`\nRunning example: ${example}\n`);
+  examples[example]().catch(console.error);
 } else {
   console.log(`
-Exemples disponibles:
-  npx ts-node examples.ts basique    - Usage basique sans adapter
-  npx ts-node examples.ts builtins   - Avec builtin adapters
-  npx ts-node examples.ts injection  - Injection directe d'adapter
-  npx ts-node examples.ts plugin     - Chargement de plugin
+Available examples:
+  npx ts-node examples.ts basic      - Basic usage without adapter
+  npx ts-node examples.ts builtins   - With builtin adapters
+  npx ts-node examples.ts injection  - Direct adapter injection
+  npx ts-node examples.ts plugin     - Plugin loading
   npx ts-node examples.ts multi      - Multi-agents
-  npx ts-node examples.ts middleware - Adapter avec middleware
-  npx ts-node examples.ts events     - Pattern observer
+  npx ts-node examples.ts middleware - Adapter with middleware
+  npx ts-node examples.ts events     - Observer pattern
+  npx ts-node examples.ts utils      - Middleware utilities
+  npx ts-node examples.ts ai         - AI CLI adapters
 `);
 }

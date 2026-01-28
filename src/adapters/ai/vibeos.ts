@@ -62,4 +62,3 @@ export const vibeosAdapter: Adapter = {
   ],
 };
 
-export default vibeosAdapter;

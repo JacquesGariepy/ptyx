@@ -9,6 +9,10 @@ import type {
   Middleware,
   MiddlewareFn,
   Context,
+  ExpectOptions,
+  ExpectResult,
+  WaitForAnyResult,
+  HealthcheckResult,
 } from './types.js';
 import {
   uid,
@@ -20,6 +24,7 @@ import {
   FlushBuffer,
   getTerminalSize,
 } from './utils.js';
+import { createLogger, type Logger } from './logger.js';
 
 /**
  * PtyAgent - Universal transparent PTY wrapper
@@ -28,6 +33,69 @@ import {
  * Supports middleware for interception, transformation, and logging.
  */
 export class PtyAgent extends EventEmitter implements IAgent {
+  /** Key codes mapping for sendKeys() */
+  private static readonly KEY_CODES: Record<string, string> = {
+    'enter': '\r',
+    'return': '\r',
+    'tab': '\t',
+    'escape': '\x1b',
+    'esc': '\x1b',
+    'backspace': '\x7f',
+    'delete': '\x1b[3~',
+    'up': '\x1b[A',
+    'down': '\x1b[B',
+    'right': '\x1b[C',
+    'left': '\x1b[D',
+    'home': '\x1b[H',
+    'end': '\x1b[F',
+    'pageup': '\x1b[5~',
+    'pagedown': '\x1b[6~',
+    'insert': '\x1b[2~',
+    'f1': '\x1bOP',
+    'f2': '\x1bOQ',
+    'f3': '\x1bOR',
+    'f4': '\x1bOS',
+    'f5': '\x1b[15~',
+    'f6': '\x1b[17~',
+    'f7': '\x1b[18~',
+    'f8': '\x1b[19~',
+    'f9': '\x1b[20~',
+    'f10': '\x1b[21~',
+    'f11': '\x1b[23~',
+    'f12': '\x1b[24~',
+    'ctrl+a': '\x01',
+    'ctrl+b': '\x02',
+    'ctrl+c': '\x03',
+    'ctrl+d': '\x04',
+    'ctrl+e': '\x05',
+    'ctrl+f': '\x06',
+    'ctrl+g': '\x07',
+    'ctrl+h': '\x08',
+    'ctrl+i': '\x09',
+    'ctrl+j': '\x0a',
+    'ctrl+k': '\x0b',
+    'ctrl+l': '\x0c',
+    'ctrl+m': '\x0d',
+    'ctrl+n': '\x0e',
+    'ctrl+o': '\x0f',
+    'ctrl+p': '\x10',
+    'ctrl+q': '\x11',
+    'ctrl+r': '\x12',
+    'ctrl+s': '\x13',
+    'ctrl+t': '\x14',
+    'ctrl+u': '\x15',
+    'ctrl+v': '\x16',
+    'ctrl+w': '\x17',
+    'ctrl+x': '\x18',
+    'ctrl+y': '\x19',
+    'ctrl+z': '\x1a',
+    'ctrl+[': '\x1b',
+    'ctrl+\\': '\x1c',
+    'ctrl+]': '\x1d',
+    'ctrl+^': '\x1e',
+    'ctrl+_': '\x1f',
+  };
+
   private _pty: IPty | null = null;
   private _running = false;
   private _history: Message[] = [];
@@ -37,17 +105,24 @@ export class PtyAgent extends EventEmitter implements IAgent {
   private _restartCount = 0;
   private _disposed = false;
   private _buffer: FlushBuffer;
-  
+  private _log: Logger;
+  private _createdAt: number = Date.now();
+
   public readonly id: string;
   public readonly name: string;
   public readonly config: Readonly<AgentConfig>;
   
   constructor(config: AgentConfig) {
     super();
-    
+
     this.id = uid();
     this.name = config.name || `agent-${this.id.slice(0, 6)}`;
-    
+
+    // Create logger for this agent (respects PTYX_DEBUG env var)
+    this._log = createLogger(`Agent:${this.name}`, {
+      forceDebug: config.debug,
+    });
+
     // Apply defaults
     this.config = Object.freeze({
       command: config.command,
@@ -65,19 +140,19 @@ export class PtyAgent extends EventEmitter implements IAgent {
       timeout: config.timeout || 30000,
       name: this.name,
     });
-    
+
     // Setup output buffer
     this._buffer = new FlushBuffer(
       (data) => this.handleOutput(data),
       50
     );
-    
+
     // Register initial middleware
     for (const mw of this.config.middleware || []) {
       this.use(mw);
     }
-    
-    this.debug(`Agent created: ${this.name} (${this.config.command})`);
+
+    this._log.debug(`Agent created: ${this.name} (${this.config.command})`);
   }
   
   // ═══════════════════════════════════════════════════════════════════════════
@@ -343,7 +418,7 @@ export class PtyAgent extends EventEmitter implements IAgent {
     timeout?: number
   ): Promise<Message> {
     const ms = timeout ?? this.config.timeout ?? 30000;
-    
+
     return withTimeout(
       new Promise<Message>((resolve) => {
         const handler = (msg: Message) => {
@@ -358,7 +433,188 @@ export class PtyAgent extends EventEmitter implements IAgent {
       `Timeout waiting for pattern: ${pattern}`
     );
   }
-  
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Enhanced API
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Wait for pattern and return match details (pexpect-like API)
+   */
+  async expect(
+    pattern: RegExp | string,
+    options?: ExpectOptions
+  ): Promise<ExpectResult> {
+    const { timeout = this.config.timeout, echo = false } = options || {};
+    const ms = timeout ?? 30000;
+    let buffer = '';
+
+    return withTimeout(
+      new Promise<ExpectResult>((resolve) => {
+        const handler = (msg: Message) => {
+          if (msg.direction === 'out') {
+            buffer += msg.text;
+            const regex = typeof pattern === 'string' ? new RegExp(pattern) : pattern;
+            const match = buffer.match(regex);
+            if (match) {
+              this.off('message', handler);
+              const idx = match.index ?? 0;
+              if (echo) {
+                this.debug(`expect matched: ${match[0]}`);
+              }
+              resolve({
+                match,
+                before: buffer.slice(0, idx),
+                after: buffer.slice(idx + match[0].length),
+              });
+            }
+          }
+        };
+        this.on('message', handler);
+      }),
+      ms,
+      `expect: timeout waiting for ${pattern}`
+    );
+  }
+
+  /**
+   * Wait for ALL patterns to match (in any order)
+   */
+  async waitForAll(
+    patterns: (RegExp | string)[],
+    timeout?: number
+  ): Promise<Message[]> {
+    const ms = timeout ?? this.config.timeout ?? 30000;
+    const remaining = new Set(patterns);
+    const matches: Message[] = [];
+
+    return withTimeout(
+      new Promise<Message[]>((resolve) => {
+        const handler = (msg: Message) => {
+          if (msg.direction === 'out') {
+            for (const pattern of remaining) {
+              if (matchPattern(msg.text, pattern)) {
+                remaining.delete(pattern);
+                matches.push(msg);
+                if (remaining.size === 0) {
+                  this.off('message', handler);
+                  resolve(matches);
+                }
+                break;
+              }
+            }
+          }
+        };
+        this.on('message', handler);
+      }),
+      ms,
+      `waitForAll: timeout waiting for ${patterns.length} patterns`
+    );
+  }
+
+  /**
+   * Wait for FIRST pattern to match
+   */
+  async waitForAny(
+    patterns: (RegExp | string)[],
+    timeout?: number
+  ): Promise<WaitForAnyResult> {
+    const ms = timeout ?? this.config.timeout ?? 30000;
+
+    return withTimeout(
+      new Promise<WaitForAnyResult>((resolve) => {
+        const handler = (msg: Message) => {
+          if (msg.direction === 'out') {
+            for (let i = 0; i < patterns.length; i++) {
+              const pattern = patterns[i];
+              if (matchPattern(msg.text, pattern)) {
+                this.off('message', handler);
+                resolve({ pattern, message: msg, index: i });
+                return;
+              }
+            }
+          }
+        };
+        this.on('message', handler);
+      }),
+      ms,
+      `waitForAny: timeout waiting for any of ${patterns.length} patterns`
+    );
+  }
+
+  /**
+   * Wait for no output for specified duration (idle detection)
+   */
+  async waitForIdle(idleMs: number = 1000, timeout?: number): Promise<void> {
+    const maxTimeout = timeout ?? this.config.timeout ?? 30000;
+    let lastActivity = Date.now();
+
+    return withTimeout(
+      new Promise<void>((resolve) => {
+        const resetTimer = () => {
+          lastActivity = Date.now();
+        };
+
+        const checkIdle = () => {
+          if (Date.now() - lastActivity >= idleMs) {
+            this.off('message', resetTimer);
+            resolve();
+          } else {
+            setTimeout(checkIdle, Math.min(100, idleMs / 10));
+          }
+        };
+
+        this.on('message', resetTimer);
+        setTimeout(checkIdle, idleMs);
+      }),
+      maxTimeout,
+      `waitForIdle: timeout after ${maxTimeout}ms`
+    );
+  }
+
+  /**
+   * Send special keys (ctrl+c, enter, escape, arrows, etc.)
+   */
+  sendKeys(keys: string | string[]): void {
+    const keyList = Array.isArray(keys) ? keys : [keys];
+    for (const key of keyList) {
+      const code = PtyAgent.KEY_CODES[key.toLowerCase()] ?? key;
+      this.write(code);
+    }
+  }
+
+  /**
+   * Send data without logging (for passwords and secrets)
+   * Bypasses middleware to avoid logging sensitive data
+   */
+  sendSecret(data: string): void {
+    if (!this._pty || !this._running) {
+      this.debug('Cannot write: not running');
+      return;
+    }
+    // Write directly to PTY, bypassing middleware
+    this._pty.write(data);
+    // Add redacted entry to history
+    const msg = createMessage('[REDACTED]', 'in', this.id, ++this._seq);
+    msg.meta.secret = true;
+    this._history.push(msg);
+    this.emit('data', '[REDACTED]', 'in');
+  }
+
+  /**
+   * Check agent health and status
+   */
+  async healthcheck(): Promise<HealthcheckResult> {
+    return {
+      healthy: this._running && !this._disposed,
+      running: this._running,
+      pid: this.pid,
+      uptime: Date.now() - this._createdAt,
+      messageCount: this._history.length,
+      memoryUsage: process.memoryUsage(),
+    };
+  }
+
   // ═══════════════════════════════════════════════════════════════════════════
   // Internal
   // ═══════════════════════════════════════════════════════════════════════════
@@ -373,11 +629,20 @@ export class PtyAgent extends EventEmitter implements IAgent {
     });
   }
   
+  /**
+   * Internal debug logging via centralized logger
+   * Respects PTYX_DEBUG env var and config.debug option
+   */
   private debug(message: string): void {
-    if (this.config.debug) {
-      const prefix = `[ptyx:${this.name}]`;
-      console.error(`${prefix} ${message}`);
-    }
+    this._log.debug(message);
+  }
+
+  /**
+   * Get the logger instance for this agent
+   * Useful for subclasses or middleware
+   */
+  get log(): Logger {
+    return this._log;
   }
   
   // ═══════════════════════════════════════════════════════════════════════════

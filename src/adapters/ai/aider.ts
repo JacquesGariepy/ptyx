@@ -59,4 +59,3 @@ export const aiderAdapter: Adapter = {
   ],
 };
 
-export default aiderAdapter;

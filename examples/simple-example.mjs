@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Exemple simple - Comment utiliser ptyx
+ * Simple example - How to use ptyx
  *
  * Installation:
  *   npm install ptyx
  *
- * Lancement:
+ * Run:
  *   node simple-example.mjs
  */
 
@@ -13,62 +13,62 @@ import { createAgent, createWithAdapter, logger } from 'ptyx';
 import { registerAiAdapters } from 'ptyx/adapters/ai';
 
 // ════════════════════════════════════════════════════════════════════
-// Option 1: Lancer Claude
+// Option 1: Run Claude
 // ════════════════════════════════════════════════════════════════════
 
 async function runClaude() {
-  console.log('🚀 Lancement de Claude...\n');
+  console.log('Starting Claude...\n');
 
   // Register AI adapters
   registerAiAdapters();
 
-  // Créer l'agent Claude
+  // Create Claude agent
   const ai = await createWithAdapter({ command: 'claude' });
 
-  // Écouter les messages
+  // Listen for messages
   ai.on('message', (msg) => {
     if (msg.direction === 'out') {
-      // msg.raw = avec couleurs ANSI
-      // msg.text = texte propre
+      // msg.raw = with ANSI colors
+      // msg.text = clean text
       process.stdout.write(msg.raw);
     }
   });
 
-  // Envoyer une question
-  ai.sendLine('Dis "Bonjour" en 5 langues différentes.');
+  // Send a question
+  ai.sendLine('Say "Hello" in 5 different languages.');
 
-  // Attendre la fin de la réponse (prompt)
+  // Wait for end of response (prompt)
   await ai.waitFor(/[❯>]\s*$/, 60000);
 
-  console.log('\n\n✅ Réponse reçue!');
+  console.log('\n\nResponse received!');
 
-  // Fermer
+  // Close
   await ai.dispose();
 }
 
 // ════════════════════════════════════════════════════════════════════
-// Option 2: Lancer n'importe quel CLI
+// Option 2: Run any CLI
 // ════════════════════════════════════════════════════════════════════
 
 async function runAnyCLI() {
-  console.log('🚀 Lancement de bash...\n');
+  console.log('Starting bash...\n');
 
   const agent = await createAgent({
     command: 'bash',
     args: [],
   });
 
-  // Logger les sorties
+  // Log outputs
   agent.use(logger({ output: true }));
 
-  // Écouter
+  // Listen
   agent.on('message', (msg) => {
     if (msg.direction === 'out') {
       console.log('[BASH]', msg.text);
     }
   });
 
-  // Envoyer des commandes
+  // Send commands
   agent.sendLine('echo "Hello World"');
   agent.sendLine('pwd');
   agent.sendLine('ls -la');
@@ -80,12 +80,12 @@ async function runAnyCLI() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// Option 3: Mode passthrough transparent (comme un vrai terminal)
+// Option 3: Transparent passthrough mode (like a real terminal)
 // ════════════════════════════════════════════════════════════════════
 
 async function transparentMode() {
   const command = process.argv[3] || 'bash';
-  console.log(`🚀 Mode transparent: ${command}\n`);
+  console.log(`Transparent mode: ${command}\n`);
 
   const agent = await createAgent({
     command,
@@ -111,9 +111,9 @@ async function transparentMode() {
     agent.resize(process.stdout.columns, process.stdout.rows);
   });
 
-  // Exit quand le process termine
+  // Exit when process terminates
   agent.on('exit', (code) => {
-    console.log(`\n\nProcess terminé (code: ${code})`);
+    console.log(`\n\nProcess exited (code: ${code})`);
     process.exit(code);
   });
 }
@@ -137,8 +137,8 @@ switch (mode) {
   default:
     console.log(`
 Usage:
-  node simple-example.mjs claude      # Lancer Claude
-  node simple-example.mjs bash        # Lancer bash
-  node simple-example.mjs transparent [cmd] [args...]  # Mode passthrough
+  node simple-example.mjs claude      # Run Claude
+  node simple-example.mjs bash        # Run bash
+  node simple-example.mjs transparent [cmd] [args...]  # Passthrough mode
 `);
 }

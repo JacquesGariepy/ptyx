@@ -20,8 +20,28 @@
 ## Installation
 
 ```bash
+# npm
 npm install ptyx
+
+# pnpm
+pnpm add ptyx
+
+# yarn
+yarn add ptyx
 ```
+
+### Platform Support
+
+ptyx works out of the box on all platforms:
+
+| Platform | Architecture | Status |
+|----------|--------------|--------|
+| Windows | x64, arm64 | ✅ |
+| macOS | Intel (x64) | ✅ |
+| macOS | Apple Silicon (M1/M2/M3) | ✅ |
+| Linux | x64, arm64 | ✅ |
+
+Native bindings are automatically downloaded for your platform during installation.
 
 ## Quick Start
 
@@ -86,9 +106,8 @@ import { registerAiAdapters } from 'ptyx/adapters/ai';
 // Register all AI CLI adapters at once
 registerAiAdapters();
 
-// Includes: claude, copilot, amazon-q, gemini, mistral, perplexity,
-// ollama, tabby, aider, cody, cursor, continue, goose, vibeos,
-// opencode, codeium, open-interpreter, chatgpt, codex, llm
+// Includes: claude, copilot, gemini, mistral (vibe), ollama, lmstudio,
+// aider, cursor, vibeos, opencode, codex
 ```
 
 ### Built-in REPL Adapters
@@ -210,6 +229,199 @@ interface Message {
 }
 ```
 
+## Advanced Features
+
+### Enhanced API
+
+```typescript
+// expect() - pexpect-like API with match details
+const result = await agent.expect(/pattern/, { timeout: 5000 });
+console.log(result.match, result.before, result.after);
+
+// waitForAll() - wait for multiple patterns
+const msgs = await agent.waitForAll([/ready/, /loaded/], 10000);
+
+// waitForAny() - wait for first matching pattern
+const { pattern, message, index } = await agent.waitForAny([/yes/, /no/]);
+
+// waitForIdle() - wait for no output
+await agent.waitForIdle(1000);
+
+// sendKeys() - send special keys
+agent.sendKeys(['ctrl+c', 'enter', 'escape']);
+
+// sendSecret() - send without logging
+agent.sendSecret('password123');
+
+// healthcheck() - get agent status
+const health = await agent.healthcheck();
+```
+
+### Session Recording & Playback
+
+```typescript
+import { createSessionRecorder, SessionPlayer } from 'ptyx';
+
+// Record session
+const { middleware, getRecorder } = createSessionRecorder();
+const agent = await createAgent({ command: 'bash', middleware: [middleware] });
+
+// ... use agent ...
+
+// Export recording
+const recorder = getRecorder();
+recorder.end();
+const json = recorder.export('json');      // JSON format
+const cast = recorder.export('asciinema'); // asciinema format
+
+// Replay session
+const player = SessionPlayer.fromJSON(json);
+await player.play((data) => process.stdout.write(data));
+```
+
+### Streams API
+
+```typescript
+import { createReadStream, createWriteStream, collectOutput } from 'ptyx';
+
+// Pipe agent output
+const readable = createReadStream(agent);
+readable.pipe(process.stdout);
+
+// Write via stream
+const writable = createWriteStream(agent, { addNewline: true });
+writable.write('echo hello');
+
+// Collect all output
+const output = await collectOutput(agent, { timeout: 5000 });
+```
+
+### Agent Pool
+
+```typescript
+import { createAgentPool } from 'ptyx';
+
+const pool = createAgentPool({
+  maxAgents: 10,
+  minIdle: 2,
+  agentConfig: { command: 'node', args: ['-i'] },
+  acquireTimeout: 5000,
+  validate: (agent) => agent.running,
+});
+
+await pool.warmup(3);
+const agent = await pool.acquire();
+// ... use agent ...
+pool.release(agent);
+await pool.destroy();
+```
+
+### WebSocket Server
+
+```typescript
+import { createServer } from 'ptyx';
+
+const server = createServer({
+  port: 8080,
+  agentConfig: { command: 'bash' },
+  authenticate: (req) => req.headers['auth'] === 'secret',
+});
+
+server.on('connection', (id) => console.log(`Connected: ${id}`));
+await server.start();
+```
+
+### Terminal Detection & Emulation
+
+```typescript
+import { detectTerminal, createTerminalEmulator, TerminalProfiles } from 'ptyx';
+
+// Detect current terminal environment
+const info = detectTerminal();
+
+// Available detection flags:
+console.log(info.isVSCode);          // VS Code integrated terminal
+console.log(info.isCursor);          // Cursor IDE
+console.log(info.isWindowsTerminal); // Windows Terminal
+console.log(info.isITerm);           // iTerm2 (macOS)
+console.log(info.isKitty);           // Kitty terminal
+console.log(info.isAlacritty);       // Alacritty
+console.log(info.isHyper);           // Hyper terminal
+console.log(info.isWarp);            // Warp terminal
+console.log(info.isTabby);           // Tabby (formerly Terminus)
+console.log(info.isJetBrains);       // JetBrains IDEs
+console.log(info.isConEmu);          // ConEmu/Cmder (Windows)
+console.log(info.isSSH);             // SSH session
+console.log(info.isTmux);            // Inside tmux
+console.log(info.isScreen);          // Inside GNU screen
+console.log(info.isCI);              // CI environment (GitHub Actions, GitLab CI, etc.)
+console.log(info.isDocker);          // Docker container
+console.log(info.isWSL);             // Windows Subsystem for Linux
+console.log(info.isTTY);             // Interactive TTY
+
+// Terminal capabilities
+console.log(info.cols, info.rows);   // Terminal size
+console.log(info.colorDepth);        // Color depth (1, 4, 8, or 24)
+console.log(info.trueColor);         // True color (24-bit) support
+console.log(info.unicode);           // Unicode support
+console.log(info.shell);             // Shell type (bash, zsh, powershell, etc.)
+console.log(info.program);           // Terminal program name
+console.log(info.version);           // Terminal program version
+
+// Emulate a different terminal for CLI tools that check environment
+const emulator = createTerminalEmulator({
+  profile: 'vscode',  // or 'iterm2', 'kitty', 'windows-terminal', etc.
+  respondToQueries: true,
+});
+
+const agent = await createAgent({
+  command: 'some-cli',
+  middleware: [emulator],
+});
+
+// Available profiles: vscode, cursor, windows-terminal, iterm2, kitty,
+// alacritty, hyper, warp, tabby, jetbrains, conemu, macos-terminal,
+// gnome-terminal, konsole, xterm, tmux, ssh, dumb
+```
+
+### Logging
+
+ptyx includes a centralized logging system that all components use.
+
+```typescript
+import { createLogger, setLogLevel, LogLevel } from 'ptyx';
+
+// Create a logger for your component
+const log = createLogger('MyComponent');
+
+// Logging methods (all go to stderr except print/printError)
+log.debug('Detailed debug info');     // Only shown when debug enabled
+log.info('General information');      // Default level
+log.warn('Warning message');          // Warnings
+log.error('Error occurred');          // Errors
+
+// Event and timing (only shown in debug mode)
+log.event('connection', { host: 'localhost', port: 8080 });
+log.timing('Request completed', startTime);  // Logs duration in ms
+
+// Check if debug mode is enabled
+if (log.isDebugEnabled()) {
+  // expensive debug operation
+}
+
+// User-facing output (goes to stdout/stderr, not logging)
+log.print('Version: 1.0.0');          // stdout
+log.printError('Command failed');     // stderr
+
+// Create child loggers for sub-components
+const childLog = log.child('SubModule');  // Creates 'MyComponent:SubModule'
+
+// Control log level programmatically
+setLogLevel(LogLevel.DEBUG);   // Show all logs
+setLogLevel(LogLevel.WARN);    // Only warnings and errors
+setLogLevel(LogLevel.SILENT);  // No logs
+```
+
 ## Middleware
 
 Middleware lets you intercept, transform, log, or block messages.
@@ -227,6 +439,8 @@ import {
   recorder,      // Record session
   filter,        // Filter output
   stealth,       // Remove proxy traces
+  metrics,       // Performance metrics
+  audit,         // Audit logging
 } from 'ptyx';
 ```
 
@@ -350,9 +564,34 @@ test('CLI responds correctly', async () => {
 
 | Variable | Description |
 |----------|-------------|
-| `PTYX_DEBUG` | Set to `1` for debug output |
-| `PTYX_LOG` | Path to log file |
+| `PTYX_DEBUG` | Set to `1` or `true` for debug output (shows DEBUG level logs) |
+| `PTYX_LOG_LEVEL` | Log level: `debug`, `info`, `warn`, `error`, or `silent` |
+| `PTYX_LOG` | Path to log file for the CLI |
 | `PTYX_ADAPTERS` | Comma-separated adapter plugins to load |
+| `PTYX_SIMULATE` | Simulate terminal environment: `vscode`, `ci`, `tty`, or `notty` |
+| `NO_COLOR` | Set to `1` to disable colored output |
+
+### Log Level Hierarchy
+
+Logs are filtered based on the current level:
+
+```
+debug → info → warn → error → silent
+```
+
+Setting `PTYX_LOG_LEVEL=warn` shows only `warn` and `error` messages. Setting `PTYX_DEBUG=1` is equivalent to `PTYX_LOG_LEVEL=debug`.
+
+Example:
+```bash
+# Show all debug info
+PTYX_DEBUG=1 npx ptyx claude
+
+# Show only warnings and errors
+PTYX_LOG_LEVEL=warn npx ptyx claude
+
+# Silent mode (no logs)
+PTYX_LOG_LEVEL=silent npx ptyx claude
+```
 
 ## Publishing to npm
 

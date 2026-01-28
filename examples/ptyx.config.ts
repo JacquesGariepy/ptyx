@@ -12,13 +12,11 @@
  */
 
 import {
-  registerAdapter,
   registerAdapters,
   loadAdapterPlugin,
   defineAdapter,
   createWithAdapter,
   type Adapter,
-  type AgentConfig,
 } from 'ptyx';
 
 // ═══════════════════════════════════════════════════════════════════════════════

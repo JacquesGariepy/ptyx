@@ -58,4 +58,3 @@ export const ollamaAdapter: Adapter = {
   ],
 };
 
-export default ollamaAdapter;
