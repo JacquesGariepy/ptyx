@@ -687,3 +687,7 @@ npm publish
 ## License
 
 MIT © Jacques Gariepy
+
+The user acknowledges that any use of this source code, including examples, derivatives, adaptations, compilations, execution, or any other form of use, is undertaken solely at the user’s own risk and responsibility. The author, contributors, and any associated parties shall not be held liable, directly or indirectly, for any damages, losses, claims, service interruptions, security incidents, data compromise, or other consequences arising from the use, misuse, interpretation, distribution, or inability to use this code, including in contexts not originally intended.
+
+This code is provided “as is,” without warranty of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, non-infringement, security, or error-free operation. The user is solely responsible for performing any validations, testing, compliance checks, and security measures required for their specific environment, legal obligations, and operational requirements.
